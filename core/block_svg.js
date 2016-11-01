@@ -662,11 +662,20 @@ Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
       callback: function() {
         Blockly.duplicate_(block);
       }
+    }; 
+    var duplicateSetOption = {
+      text: Blockly.Msg.DUPLICATE_SET_BLOCK,
+      enabled: true,
+      callback: function() {
+        Blockly.duplicateSet_(block);
+      }
     };
     if (this.getDescendants().length > this.workspace.remainingCapacity()) {
       duplicateOption.enabled = false;
+      duplicateSetOption.enabled = false;
     }
     menuOptions.push(duplicateOption);
+    menuOptions.push(duplicateSetOption);
 
     if (this.isEditable() && !this.collapsed_ &&
         this.workspace.options.comments) {

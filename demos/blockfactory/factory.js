@@ -336,6 +336,12 @@ function getFieldsJs_(block) {
               Number(block.getFieldValue('ANGLE')) + '), ' +
               escapeString(block.getFieldValue('FIELDNAME')));
           break;
+        case 'field_bezier':
+          // Result: new Blockly.FieldBezier("TRUE"), "NAME");
+          fields.push('new Blockly.FieldBezier(' +
+              escapeString(block.getFieldValue('SURFACE_ONLY')) + '), ' +
+              escapeString(block.getFieldValue('FIELDNAME')));
+          break;
         case 'field_checkbox':
           // Result: new Blockly.FieldCheckbox('TRUE'), 'CHECK'
           fields.push('new Blockly.FieldCheckbox(' +
@@ -433,6 +439,13 @@ function getFieldsJson_(block) {
           fields.push(obj);
           break;
         case 'field_angle':
+          fields.push({
+            type: block.type,
+            name: block.getFieldValue('FIELDNAME'),
+            angle: Number(block.getFieldValue('ANGLE'))
+          });
+          break;
+        case 'field_bezier':
           fields.push({
             type: block.type,
             name: block.getFieldValue('FIELDNAME'),

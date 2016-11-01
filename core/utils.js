@@ -289,6 +289,24 @@ Blockly.createSvgElement = function(name, attrs, parent, opt_workspace) {
   return e;
 };
 
+Blockly.createHtmlElement = function(name, attrs, parent, opt_workspace) {
+  var e = /** @type {!SVGElement} */ (
+      document.createElementNS(Blockly.HTML_NS, name));
+  for (var key in attrs) {
+    e.setAttribute(key, attrs[key]);
+  }
+  // IE defines a unique attribute "runtimeStyle", it is NOT applied to
+  // elements created with createElementNS. However, Closure checks for IE
+  // and assumes the presence of the attribute and crashes.
+  if (document.body.runtimeStyle) {  // Indicates presence of IE-only attr.
+    e.runtimeStyle = e.currentStyle = e.style;
+  }
+  if (parent) {
+    parent.appendChild(e);
+  }
+  return e;
+};
+
 /**
  * Is this event a right-click?
  * @param {!Event} e Mouse event.

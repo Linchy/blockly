@@ -288,6 +288,27 @@ Blockly.Blocks['field_angle'] = {
   }
 };
 
+Blockly.Blocks['field_bezier'] = {
+  // Angle input.
+  init: function() {
+    this.setColour(160);
+    this.appendDummyInput()
+        .appendField('Bezier')
+        .appendField(new Blockly.FieldBezier('90'), 'ANGLE')
+        .appendField(',')
+        .appendField(new Blockly.FieldTextInput('NAME'), 'FIELDNAME')
+        .appendField(', Surface Only')
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'SURFACE_ONLY');
+    this.setPreviousStatement(true, 'Field');
+    this.setNextStatement(true, 'Field');
+    this.setTooltip('An input field for the user to edit a bezier curve.');
+    this.setHelpUrl('http://pomax.github.io/bezierjs/');
+  },
+  onchange: function() {
+    fieldNameCheck(this);
+  }
+};
+
 Blockly.Blocks['field_dropdown'] = {
   // Dropdown menu.
   init: function() {

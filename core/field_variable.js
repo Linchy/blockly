@@ -57,13 +57,48 @@ Blockly.FieldVariable.prototype.init = function() {
     return;
   }
   Blockly.FieldVariable.superClass_.init.call(this);
+  
+  var workspace =
+      this.sourceBlock_.isInFlyout ?
+          this.sourceBlock_.workspace.targetWorkspace :
+          this.sourceBlock_.workspace;
+
   if (!this.getValue()) {
     // Variables without names get uniquely named for this workspace.
-    var workspace =
-        this.sourceBlock_.isInFlyout ?
-            this.sourceBlock_.workspace.targetWorkspace :
-            this.sourceBlock_.workspace;
     this.setValue(Blockly.Variables.generateUniqueName(workspace));
+  }
+  else
+  {
+      var name = this.getValue();
+      if (name.startsWith("#$%"))
+      {
+        var prefix = name.substring("#$%".length);
+        var variableList = workspace.variableList;
+
+        var newName = '';
+        var nameSuffix = 0;
+
+        while (!newName) {
+          var possibleName = (prefix + nameSuffix).toLowerCase();
+          var inUse = false;
+          for (var i = 0; i < variableList.length; i++) {
+            if (variableList[i].toLowerCase() == possibleName) {
+              // This potential name is already used.
+              inUse = true;
+              break;
+            }
+          }
+          if (inUse) {
+            nameSuffix++;
+          }
+          else {
+            newName = prefix + nameSuffix;
+          }
+        }
+
+        this.setValue(newName);
+      }
+
   }
   // If the selected variable doesn't exist yet, create it.
   // For instance, some blocks in the toolbox have variable dropdowns filled

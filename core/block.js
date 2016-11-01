@@ -1109,6 +1109,9 @@ Blockly.Block.prototype.interpolate_ = function(message, args, lastDummyAlign) {
             case 'field_angle':
               field = new Blockly.FieldAngle(element['angle']);
               break;
+            case 'field_bezier':
+              field = new Blockly.FieldBezier(element['angle']);
+              break;
             case 'field_checkbox':
               field = new Blockly.FieldCheckbox(
                   element['checked'] ? 'TRUE' : 'FALSE');

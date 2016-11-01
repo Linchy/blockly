@@ -385,6 +385,27 @@ Blockly.duplicate_ = function(block) {
 };
 
 /**
+ * Duplicate from the block's root and all it's connections.
+ * @param {!Blockly.Block} block Block to be copied.
+ * @private
+ */
+Blockly.duplicateSet_ = function(block) {
+
+  // get root
+  var rootBlock = block.getRootBlock();
+
+  // serialise
+  var xml = Blockly.Xml.blockToDom(rootBlock);
+
+  // deserialise
+  var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
+
+  // move above the original block
+  var xy = rootBlock.getRelativeToSurfaceXY();
+  newBlock.moveBy(xy.x + Blockly.SNAP_RADIUS, xy.y + Blockly.SNAP_RADIUS * (newBlock.RTL ? -2 : 2));
+};
+
+/**
  * Cancel the native context menu, unless the focus is on an HTML input widget.
  * @param {!Event} e Mouse down event.
  * @private

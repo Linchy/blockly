@@ -5,29 +5,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="target-densitydpi=device-dpi, height=660, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
   <title>Blockly Demo: Blockly Factory</title>
-  <script src="../../blockly_compressed.js"></script>
+    
+	
+  <!--<link rel="stylesheet" type="text/css" href="../../../curvesjs/test/css/styles.min.css">-->
+	<script type="text/javascript" src="../../../curvesjs/src/js/modules/point.js"></script>
+	<script type="text/javascript" src="../../../curvesjs/src/js/modules/bezierpoint.js"></script>
+	<script type="text/javascript" src="../../../curvesjs/src/js/modules/curve.js"></script>
+
+	<!-- <script type="text/javascript" src="../../../curvesjs/dist/curves.min.js"></script>-->
+
+  <!-- <script src="../../blockly_compressed.js"></script> -->
+  <script src="../../blockly_uncompressed.js"></script>
+  <script src="factory_utils.js"></script>
+  <script src="block_option.js"></script>
+  <script src="../../../closure-library/closure/goog/base.js"></script>
+  <script src="../blockfactory/blocks.js"></script>
   <script src="../../javascript_compressed.js"></script>
   <script src="../../msg/messages.js"></script>
-  <script src="../../blocks_compressed.js"></script>
+  
+ <!--  <script src="../../blocks_compressed.js"></script> -->
+  <script src="../../blocks/logic.js"></script>
+<script src="../../blocks/loops.js"></script>
+<script src="../../blocks/math.js"></script>
+<script src="../../blocks/text.js"></script>
+<script src="../../blocks/lists.js"></script>
+<script src="../../blocks/colour.js"></script>
+<script src="../../blocks/variables.js"></script>
+<script src="../../blocks/procedures.js"></script>
+  
   <script src="workspacefactory/wfactory_model.js"></script>
-  <script src="workspacefactory/wfactory_controller.js"></script>
   <script src="workspacefactory/wfactory_view.js"></script>
   <script src="workspacefactory/wfactory_generator.js"></script>
   <script src="workspacefactory/wfactory_init.js"></script>
   <script src="standard_categories.js"></script>
-  <script src="/storage.js"></script>
-  <script src="../../../closure-library/closure/goog/base.js"></script>
-  <script src="factory_utils.js"></script>
-  <script src="block_option.js"></script>
+  <script src="workspacefactory/wfactory_controller.js"></script>
   <script src="factory.js"></script>
+  <script src="/storage.js"></script>
   <script src="block_library_view.js"></script>
   <script src="block_library_storage.js"></script>
   <script src="block_library_controller.js"></script>
   <script src="block_exporter_tools.js"></script>
   <script src="block_exporter_view.js"></script>
   <script src="block_exporter_controller.js"></script>
-  <script src="../blockfactory/blocks.js"></script>
   <script src="app_controller.js"></script>
   <link rel="stylesheet" href="factory.css">
   <link rel="stylesheet" href="../prettify.css">
@@ -42,6 +63,7 @@
   </script>
 </head>
 <body onbeforeunload="return blocklyFactory.confirmLeavePage()">
+
 <h1><a href="https://developers.google.com/blockly/">Blockly</a> &gt;
   <a href="../index.html">Demos</a> &gt; Blockly Factory
   <button id="helpButton" title="View documentation in new window.">
@@ -407,6 +429,7 @@
       <block type="field_dropdown"></block>
       <block type="field_checkbox"></block>
       <block type="field_colour"></block>
+      <block type="field_bezier"></block>
       <!--
       Date picker commented out since it increases footprint by 60%.
       Add it only if you need it.  See also goog.require in blockly.js.
