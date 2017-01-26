@@ -295,10 +295,10 @@ Blockly.Blocks['field_bezier'] = {
     this.appendDummyInput()
         .appendField('Bezier')
         .appendField(new Blockly.FieldBezier('90'), 'ANGLE')
-        .appendField(',')
+        .appendField('Name')
         .appendField(new Blockly.FieldTextInput('NAME'), 'FIELDNAME')
-        .appendField(', Surface Only')
-        .appendField(new Blockly.FieldCheckbox('FALSE'), 'SURFACE_ONLY');
+        .appendField(' Args')
+        .appendField(new Blockly.FieldTextInput(''), 'ARGS');
     this.setPreviousStatement(true, 'Field');
     this.setNextStatement(true, 'Field');
     this.setTooltip('An input field for the user to edit a bezier curve.');

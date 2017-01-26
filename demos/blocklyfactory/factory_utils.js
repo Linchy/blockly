@@ -413,7 +413,7 @@ FactoryUtils.getFieldsJs_ = function(block) {
         case 'field_bezier':
           // Result: new Blockly.FieldBezier("TRUE"), "NAME");
           fields.push('new Blockly.FieldBezier(' +
-              FactoryUtils.escapeString(block.getFieldValue('SURFACE_ONLY')) + '), ' +
+              FactoryUtils.escapeString(block.getFieldValue('ARGS')) + '), ' +
               FactoryUtils.escapeString(block.getFieldValue('FIELDNAME')));
           break;
         case 'field_checkbox':

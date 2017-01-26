@@ -20,8 +20,8 @@ goog.require('goog.ui.ColorPicker');
  * @extends {Blockly.Field}
  * @constructor
  */
-Blockly.FieldBezier = function (bSurfaceOnly, opt_validator) {
-  this.bSurfaceOnly = bSurfaceOnly;
+Blockly.FieldBezier = function (args, opt_validator) {
+  this.args = this.createArgsObj(args);
   this.valueDiv = Blockly.createHtmlElement('div', {}, null);
   Blockly.FieldBezier.superClass_.constructor.call(this, '', opt_validator);
   this.setText(Blockly.Field.NBSP + Blockly.Field.NBSP + Blockly.Field.NBSP);
@@ -29,6 +29,21 @@ Blockly.FieldBezier = function (bSurfaceOnly, opt_validator) {
 };
 goog.inherits(Blockly.FieldBezier, Blockly.Field);
 
+Blockly.FieldBezier.prototype.createArgsObj = function (argsStr) {
+  var argObj = {};
+
+  if (typeof argsStr == "string" || argsStr instanceof String)
+  {
+    var argsSpl = argsStr.split(';');
+
+    argsSpl.forEach(function(argPairStr) {
+      var keyValueSpl = argPairStr.split(':');
+      argObj[keyValueSpl[0]] = (keyValueSpl.length == 1 ? true : keyValueSpl[1]);
+    }, this);
+  }
+
+  return argObj;
+};
 
 /**
  * Install this field on a block.
@@ -104,7 +119,7 @@ Blockly.FieldBezier.prototype.showEditor_ = function () {
   // div.style.height = "400px";
 
   var container = Blockly.createHtmlElement('div', {
-    "style": "width:850px; height:500px; background-color:whitesmoke; border-style: solid; border-width: 1px; padding: 5px"
+    "style": "width:auto; height:auto; background-color:whitesmoke; border-style: solid; border-width: 1px; padding: 5px"
   }, div);
 
   //container.innerHTML = '<object type="text/html" style="width:100%; height:100%;" data="file:///C:/Git/GoogleBlockly/curvesjs/src/index.html"></object>';
@@ -123,12 +138,17 @@ Blockly.FieldBezier.prototype.showEditor_ = function () {
       }
     </style>
     <div class="curveEditor fill">
-      ${this.bSurfaceOnly ? "" : '<input id="toggleCloseLoopCheckbox" type="checkbox" checked onchange="this.curve.ToggleCloseLoop(this.checked)">Close Loop</input><br />'}
+      ${this.args.closedSurfaceOnly || this.args.curveOnly ? "" : '<input id="toggleCloseLoopCheckbox" type="checkbox" checked onchange="this.curve.ToggleCloseLoop(this.checked)">Close Loop</input><br />'}
       <div class="fill">
-        <canvas class="grid" width="800" height="400"></canvas>
+        Scale: <input id="scaleTextbox" type="text" oninput="this.curve.SetScale(this.value)" value="1.0"></input>
+        <input id="increaseScaleBtn" type="button" onclick="this.increaseScale()" value="+"></input>
+        <input id="decreaseScaleBtn" type="button" onclick="this.decreaseScale()" value="-"></input>
+        Mouse: <span></span>
+        <br />
+        <canvas class="grid" width="800" height="800"></canvas>
+        <br />
+        Marker Data: <input id="markerDataTextbox" type="text" onKeyUp="this.curve.MarkerDataOnChange(this.value)">
       </div>
-      <br />
-      <span></span>
     </div>`;
 
   //if (Blockly.FieldBezier.SharedCanvas == null) {
@@ -137,15 +157,34 @@ Blockly.FieldBezier.prototype.showEditor_ = function () {
   setTimeout(function () {
 
     var toggleCloseLoopCheckbox = container.querySelector('#toggleCloseLoopCheckbox');
+    var scaleTextbox = container.querySelector('#scaleTextbox');
+    var increaseScaleBtn = container.querySelector('#increaseScaleBtn');
+    var decreaseScaleBtn = container.querySelector('#decreaseScaleBtn');
+    var markerDataTextbox = container.querySelector('#markerDataTextbox');
+
     var ctx = container.querySelector('canvas').getContext("2d");
     var span = container.querySelector('span');
 
-    var curve = new Curve(ctx, self.valueDiv, self.getValue(), self.bSurfaceOnly);
+    var curve = new Curve(ctx, self.valueDiv, self.getValue(), self.args, markerDataTextbox);
     curve.setPointStyle('#222', 8);
     curve.setLineStyle('#f5663F', 2);
 
     if (toggleCloseLoopCheckbox)
       toggleCloseLoopCheckbox.curve = curve;
+    if (scaleTextbox)
+      scaleTextbox.curve = curve;
+    if (markerDataTextbox)
+      markerDataTextbox.curve = curve;
+
+    increaseScaleBtn.increaseScale = function() {
+      scaleTextbox.value = parseFloat(scaleTextbox.value) * 2;
+      curve.SetScale(scaleTextbox.value);
+    }
+
+    decreaseScaleBtn.decreaseScale = function() {
+      scaleTextbox.value = parseFloat(scaleTextbox.value) / 2;
+      curve.SetScale(scaleTextbox.value);
+    }
 
     curve.on('mousemove', function () {
       span.innerHTML = 'X: ' + this.mouseX + ', Y: ' + this.mouseY;

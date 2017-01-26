@@ -54,7 +54,7 @@ goog.require('goog.userAgent');
 
 
 // Turn off debugging when compiled.
-var CLOSURE_DEFINES = {'goog.DEBUG': false};
+var CLOSURE_DEFINES = { 'goog.DEBUG': false };
 
 /**
  * The main workspace most recently used.
@@ -125,9 +125,9 @@ Blockly.onTouchUpWrapper_ = null;
  * @param {number} hue Hue on a colour wheel (0-360).
  * @return {string} RGB code, e.g. '#5ba65b'.
  */
-Blockly.hueToRgb = function(hue) {
+Blockly.hueToRgb = function (hue) {
   return goog.color.hsvToHex(hue, Blockly.HSV_SATURATION,
-      Blockly.HSV_VALUE * 255);
+    Blockly.HSV_VALUE * 255);
 };
 
 /**
@@ -135,9 +135,11 @@ Blockly.hueToRgb = function(hue) {
  * @param {!Element} svg SVG image.
  * @return {!Object} Contains width and height properties.
  */
-Blockly.svgSize = function(svg) {
-  return {width: svg.cachedWidth_,
-          height: svg.cachedHeight_};
+Blockly.svgSize = function (svg) {
+  return {
+    width: svg.cachedWidth_,
+    height: svg.cachedHeight_
+  };
 };
 
 /**
@@ -145,7 +147,7 @@ Blockly.svgSize = function(svg) {
  * scrollbars accordingly.
  * @param {!Blockly.WorkspaceSvg} workspace The workspace to resize.
  */
-Blockly.resizeSvgContents = function(workspace) {
+Blockly.resizeSvgContents = function (workspace) {
   workspace.resizeContents();
 };
 
@@ -157,7 +159,7 @@ Blockly.resizeSvgContents = function(workspace) {
  * Record the height/width of the SVG image.
  * @param {!Blockly.WorkspaceSvg} workspace Any workspace in the SVG.
  */
-Blockly.svgResize = function(workspace) {
+Blockly.svgResize = function (workspace) {
   var mainWorkspace = workspace;
   while (mainWorkspace.options.parentWorkspace) {
     mainWorkspace = mainWorkspace.options.parentWorkspace;
@@ -186,7 +188,7 @@ Blockly.svgResize = function(workspace) {
  * @param {!Event} e Mouse up event.
  * @private
  */
-Blockly.onMouseUp_ = function(e) {
+Blockly.onMouseUp_ = function (e) {
   var workspace = Blockly.getMainWorkspace();
   Blockly.Css.setCursor(Blockly.Css.Cursor.OPEN);
   workspace.dragMode_ = Blockly.DRAG_NONE;
@@ -206,7 +208,7 @@ Blockly.onMouseUp_ = function(e) {
  * @param {!Event} e Mouse move event.
  * @private
  */
-Blockly.onMouseMove_ = function(e) {
+Blockly.onMouseMove_ = function (e) {
   if (e.touches && e.touches.length >= 2) {
     return;  // Multi-touch gestures won't have e.clientX.
   }
@@ -220,13 +222,13 @@ Blockly.onMouseMove_ = function(e) {
     x = Math.min(x, -metrics.contentLeft);
     y = Math.min(y, -metrics.contentTop);
     x = Math.max(x, metrics.viewWidth - metrics.contentLeft -
-                 metrics.contentWidth);
+      metrics.contentWidth);
     y = Math.max(y, metrics.viewHeight - metrics.contentTop -
-                 metrics.contentHeight);
+      metrics.contentHeight);
 
     // Move the scrollbars and the page will scroll automatically.
     workspace.scrollbar.set(-x - metrics.contentLeft,
-                            -y - metrics.contentTop);
+      -y - metrics.contentTop);
     // Cancel the long-press if the drag has moved too far.
     if (Math.sqrt(dx * dx + dy * dy) > Blockly.DRAG_RADIUS) {
       Blockly.longStop_();
@@ -242,7 +244,7 @@ Blockly.onMouseMove_ = function(e) {
  * @param {!Event} e Key down event.
  * @private
  */
-Blockly.onKeyDown_ = function(e) {
+Blockly.onKeyDown_ = function (e) {
   if (Blockly.mainWorkspace.options.readOnly || Blockly.isTargetInput_(e)) {
     // No key actions on readonly workspaces.
     // When focused on an HTML text input widget, don't trap any keys.
@@ -263,7 +265,7 @@ Blockly.onKeyDown_ = function(e) {
     }
   } else if (e.altKey || e.ctrlKey || e.metaKey) {
     if (Blockly.selected &&
-        Blockly.selected.isDeletable() && Blockly.selected.isMovable()) {
+      Blockly.selected.isDeletable() && Blockly.selected.isMovable()) {
       if (e.keyCode == 67) {
         // 'c' for copy.
         Blockly.hideChaff();
@@ -305,7 +307,7 @@ Blockly.onKeyDown_ = function(e) {
  * Stop binding to the global mouseup and mousemove events.
  * @private
  */
-Blockly.terminateDrag_ = function() {
+Blockly.terminateDrag_ = function () {
   Blockly.BlockSvg.terminateDrag();
   Blockly.Flyout.terminateDrag_();
 };
@@ -327,9 +329,9 @@ Blockly.longPid_ = 0;
  *   under the touchstart event.
  * @private
  */
-Blockly.longStart_ = function(e, uiObject) {
+Blockly.longStart_ = function (e, uiObject) {
   Blockly.longStop_();
-  Blockly.longPid_ = setTimeout(function() {
+  Blockly.longPid_ = setTimeout(function () {
     e.button = 2;  // Simulate a right button click.
     uiObject.onMouseDown_(e);
   }, Blockly.LONGPRESS);
@@ -340,7 +342,7 @@ Blockly.longStart_ = function(e, uiObject) {
  * or a drag hath begun.  Kill the queued long-press task.
  * @private
  */
-Blockly.longStop_ = function() {
+Blockly.longStop_ = function () {
   if (Blockly.longPid_) {
     clearTimeout(Blockly.longPid_);
     Blockly.longPid_ = 0;
@@ -352,7 +354,7 @@ Blockly.longStop_ = function() {
  * @param {!Blockly.Block} block Block to be copied.
  * @private
  */
-Blockly.copy_ = function(block) {
+Blockly.copy_ = function (block) {
   var xmlBlock = Blockly.Xml.blockToDom(block);
   if (Blockly.dragMode_ != Blockly.DRAG_FREE) {
     Blockly.Xml.deleteNext(xmlBlock);
@@ -370,9 +372,22 @@ Blockly.copy_ = function(block) {
  * @param {!Blockly.Block} block Block to be copied.
  * @private
  */
-Blockly.duplicate_ = function(block) {
+Blockly.duplicate_ = function (block) {
+
+  // serialise
+  var xml = Blockly.Xml.blockToDom(block);
+
+  // deserialise
+  Blockly.isCurrentlyCreatingDuplicateBlocks = true;
+  var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
+  Blockly.isCurrentlyCreatingDuplicateBlocks = false;
+
+  // move above the original block
+  var xy = block.getRelativeToSurfaceXY();
+  newBlock.moveBy(xy.x + Blockly.SNAP_RADIUS, xy.y + Blockly.SNAP_RADIUS * (newBlock.RTL ? -2 : 2));
+
   // Save the clipboard.
-  var clipboardXml = Blockly.clipboardXml_;
+  /*var clipboardXml = Blockly.clipboardXml_;
   var clipboardSource = Blockly.clipboardSource_;
 
   // Create a duplicate via a copy/paste operation.
@@ -381,15 +396,17 @@ Blockly.duplicate_ = function(block) {
 
   // Restore the clipboard.
   Blockly.clipboardXml_ = clipboardXml;
-  Blockly.clipboardSource_ = clipboardSource;
+  Blockly.clipboardSource_ = clipboardSource;*/
 };
+
+Blockly.isCurrentlyCreatingDuplicateBlocks = false;
 
 /**
  * Duplicate from the block's root and all it's connections.
  * @param {!Blockly.Block} block Block to be copied.
  * @private
  */
-Blockly.duplicateSet_ = function(block) {
+Blockly.duplicateSet_ = function (block) {
 
   // get root
   var rootBlock = block.getRootBlock();
@@ -398,7 +415,9 @@ Blockly.duplicateSet_ = function(block) {
   var xml = Blockly.Xml.blockToDom(rootBlock);
 
   // deserialise
+  Blockly.isCurrentlyCreatingDuplicateBlocks = true;
   var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
+  Blockly.isCurrentlyCreatingDuplicateBlocks = false;
 
   // move above the original block
   var xy = rootBlock.getRelativeToSurfaceXY();
@@ -406,11 +425,60 @@ Blockly.duplicateSet_ = function(block) {
 };
 
 /**
+ * Copy to clipboard from the block's root and all it's connections.
+ * @param {!Blockly.Block} block Block to be copied.
+ * @private
+ */
+Blockly.copy_ = function (block) {
+
+  if (block.workspace.copyListener != null) {
+    
+    var dom = Blockly.Xml.blockToDom(block);
+    var xml = Blockly.Xml.domToText(dom);
+
+    var func = block.workspace.copyListener;
+    func(xml);
+  }
+};
+
+/**
+ * Copy to clipboard from the block's root and all it's connections.
+ * @param {!Blockly.Block} block Block to be copied.
+ * @private
+ */
+Blockly.copySet_ = function (block) {
+
+  if (block.workspace.copyListener != null) {
+
+    var rootBlock = block.getRootBlock();
+    var dom = Blockly.Xml.blockToDom(rootBlock);
+    var xml = Blockly.Xml.domToText(dom);
+
+    var func = block.workspace.copyListener;
+    func(xml);
+  }
+};
+
+/**
+ * Paste block from clipboard.
+ * @param {!Blockly.Block} block Block to be copied.
+ * @private
+ */
+Blockly.paste_ = function () {
+  var workspace = Blockly.getMainWorkspace();
+  if (workspace.pasteListener != null) {
+    
+    var func = workspace.pasteListener;
+    func();
+  }
+};
+
+/**
  * Cancel the native context menu, unless the focus is on an HTML input widget.
  * @param {!Event} e Mouse down event.
  * @private
  */
-Blockly.onContextMenu_ = function(e) {
+Blockly.onContextMenu_ = function (e) {
   if (!Blockly.isTargetInput_(e)) {
     // When focused on an HTML text input widget, don't cancel the context menu.
     e.preventDefault();
@@ -421,14 +489,14 @@ Blockly.onContextMenu_ = function(e) {
  * Close tooltips, context menus, dropdown selections, etc.
  * @param {boolean=} opt_allowToolbox If true, don't close the toolbox.
  */
-Blockly.hideChaff = function(opt_allowToolbox) {
+Blockly.hideChaff = function (opt_allowToolbox) {
   Blockly.Tooltip.hide();
   Blockly.WidgetDiv.hide();
   if (!opt_allowToolbox) {
     var workspace = Blockly.getMainWorkspace();
     if (workspace.toolbox_ &&
-        workspace.toolbox_.flyout_ &&
-        workspace.toolbox_.flyout_.autoClose) {
+      workspace.toolbox_.flyout_ &&
+      workspace.toolbox_.flyout_.autoClose) {
       workspace.toolbox_.clearSelection();
     }
   }
@@ -441,10 +509,10 @@ Blockly.hideChaff = function(opt_allowToolbox) {
  *     removeChangeListener.
  * @deprecated April 2015
  */
-Blockly.addChangeListener = function(func) {
+Blockly.addChangeListener = function (func) {
   // Backwards compatability from before there could be multiple workspaces.
   console.warn('Deprecated call to Blockly.addChangeListener, ' +
-               'use workspace.addChangeListener instead.');
+    'use workspace.addChangeListener instead.');
   return Blockly.getMainWorkspace().addChangeListener(func);
 };
 
@@ -454,15 +522,15 @@ Blockly.addChangeListener = function(func) {
  * Blockly instances on a page.
  * @return {!Blockly.Workspace} The main workspace.
  */
-Blockly.getMainWorkspace = function() {
+Blockly.getMainWorkspace = function () {
   return Blockly.mainWorkspace;
 };
 
 // IE9 does not have a console.  Create a stub to stop errors.
 if (!goog.global['console']) {
   goog.global['console'] = {
-    'log': function() {},
-    'warn': function() {}
+    'log': function () { },
+    'warn': function () { }
   };
 }
 

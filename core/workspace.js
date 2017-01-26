@@ -58,6 +58,8 @@ Blockly.Workspace = function(opt_options) {
    * @private
    */
   this.listeners_ = [];
+  this.copyListener = null;
+  this.pasteListener = null;
   /**
    * @type {!Array.<!Blockly.Events.Abstract>}
    * @private
@@ -99,6 +101,8 @@ Blockly.Workspace.prototype.MAX_UNDO = 1024;
  */
 Blockly.Workspace.prototype.dispose = function() {
   this.listeners_.length = 0;
+  this.copyListener = null;
+  this.pasteListener = null;
   this.clear();
   // Remove from workspace database.
   delete Blockly.Workspace.WorkspaceDB_[this.id];
@@ -465,6 +469,28 @@ Blockly.Workspace.prototype.fireChangeListener = function(event) {
   for (var i = 0, func; func = this.listeners_[i]; i++) {
     func(event);
   }
+};
+
+/**
+ * Fire on copy to clipboard
+ * @param {!Function} func Function to call.
+ * @return {!Function} Function that can be passed to
+ *     removeChangeListener.
+ */
+Blockly.Workspace.prototype.setCopyListener = function(func) {
+  this.copyListener = func;
+  return func;
+};
+
+/**
+ * Fire on copy to clipboard
+ * @param {!Function} func Function to call.
+ * @return {!Function} Function that can be passed to
+ *     removeChangeListener.
+ */
+Blockly.Workspace.prototype.setPasteListener = function(func) {
+  this.pasteListener = func;
+  return func;
 };
 
 /**

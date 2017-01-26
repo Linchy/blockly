@@ -623,6 +623,10 @@ Blockly.Events.Move.prototype.toJson = function() {
   var json = Blockly.Events.Move.superClass_.toJson.call(this);
   if (this.newParentId) {
     json['newParentId'] = this.newParentId;
+  
+    var workspace = Blockly.Workspace.getById(this.workspaceId);
+    var parentBlock = workspace.getBlockById(this.newParentId);
+    json['newParentXml'] = Blockly.Xml.domToText(Blockly.Xml.blockToDomWithXY(parentBlock));
   }
   if (this.newInputName) {
     json['newInputName'] = this.newInputName;

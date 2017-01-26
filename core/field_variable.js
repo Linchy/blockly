@@ -72,30 +72,7 @@ Blockly.FieldVariable.prototype.init = function() {
       var name = this.getValue();
       if (name.startsWith("#$%"))
       {
-        var prefix = name.substring("#$%".length);
-        var variableList = workspace.variableList;
-
-        var newName = '';
-        var nameSuffix = 0;
-
-        while (!newName) {
-          var possibleName = (prefix + nameSuffix).toLowerCase();
-          var inUse = false;
-          for (var i = 0; i < variableList.length; i++) {
-            if (variableList[i].toLowerCase() == possibleName) {
-              // This potential name is already used.
-              inUse = true;
-              break;
-            }
-          }
-          if (inUse) {
-            nameSuffix++;
-          }
-          else {
-            newName = prefix + nameSuffix;
-          }
-        }
-
+        var newName = Blockly.FieldVariable.GetFreeVariableName(name, workspace);
         this.setValue(newName);
       }
 
@@ -107,6 +84,35 @@ Blockly.FieldVariable.prototype.init = function() {
     this.sourceBlock_.workspace.createVariable(this.getValue());
   }
 };
+
+Blockly.FieldVariable.GetFreeVariableName = function(placeholder, workspace) {
+  
+    var prefix = placeholder.substring("#$%".length);
+    var variableList = workspace.variableList;
+
+    var newName = '';
+    var nameSuffix = 0;
+
+    while (!newName) {
+      var possibleName = (prefix + nameSuffix).toLowerCase();
+      var inUse = false;
+      for (var i = 0; i < variableList.length; i++) {
+        if (variableList[i].toLowerCase() == possibleName) {
+          // This potential name is already used.
+          inUse = true;
+          break;
+        }
+      }
+      if (inUse) {
+        nameSuffix++;
+      }
+      else {
+        newName = prefix + nameSuffix;
+      }
+    }
+
+    return newName;
+}
 
 /**
  * Get the variable's name (use a variableDB to convert into a real name).

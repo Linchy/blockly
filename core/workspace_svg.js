@@ -872,6 +872,15 @@ Blockly.WorkspaceSvg.prototype.showContextMenu_ = function(e) {
   var topBlocks = this.getTopBlocks(true);
   var eventGroup = Blockly.genUid();
 
+    var pasteOption = {
+      text: Blockly.Msg.PASTE_BLOCK,
+      enabled: true,
+      callback: function() {
+        Blockly.paste_();
+      }
+    };
+    menuOptions.push(pasteOption);
+
   // Options to undo/redo previous action.
   var undoOption = {};
   undoOption.text = Blockly.Msg.UNDO;
