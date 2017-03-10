@@ -81,6 +81,13 @@ Blockly.Workspace = function(opt_options) {
    * that are not currently in use.
    */
   this.variableList = [];
+  this.variableMetaDataList = [];
+
+  /*
+   * @type {int}
+   * Index of current workspace, whic his used to filter visible vars with
+   */
+  this.CurrentTreeIndex = 0;
 };
 
 /**
@@ -130,6 +137,7 @@ Blockly.Workspace.prototype.addTopBlock = function(block) {
     for (var i = 0; i < variables.length; i++) {
       if (this.variableList.indexOf(variables[i]) == -1) {
         this.variableList.push(variables[i]);
+        this.pushVarMetaData(variables[i]);
       }
     }
   }
@@ -204,7 +212,72 @@ Blockly.Workspace.prototype.clear = function() {
   }
 
   this.variableList.length = 0;
+  this.variableMetaDataList.length = 0;
 };
+
+Blockly.Workspace.prototype.GetVisibleVariableNames = function(opt_endBlock) {
+    var varList = [];
+
+    //console.log("ALLVARS:" + JSON.stringify(this.variableList));
+    //console.log("ALLMETA:" + JSON.stringify(this.variableMetaDataList));
+
+    var indexToStop = -1;
+
+    if (opt_endBlock) {
+      var orderedBlocks = this.getTopBlocks(true);
+      indexToStop = orderedBlocks.indexOf(opt_endBlock);
+    }
+
+    for (var i = 0; i < this.variableList.length; i++) {
+
+      // shouldn't happen
+      if (i >= this.variableMetaDataList.length)
+        break;
+
+      var meta = this.variableMetaDataList[i];
+        
+        /*console.log(
+          "meta:" + JSON.stringify(meta) + "\n"
+        );*/
+
+      if (meta.TreeIndex == this.CurrentTreeIndex && indexToStop != -1 && meta.BlockIndex > indexToStop) {
+        /*console.log(
+          "SAME TREE, FUTURE BLOCK" + "\n" +
+          "name:" + this.variableList[i] + "\n" +
+          "meta.TreeIndex:" + meta.TreeIndex + "\n" +
+          "this.CurrentTreeIndex:" + this.CurrentTreeIndex + "\n" +
+          "indexToStop:" + indexToStop + "\n" +
+          "meta.BlockIndex:" + meta.BlockIndex + "\n"
+        );*/
+        continue;
+      }
+      else if (meta.TreeIndex > this.CurrentTreeIndex) {
+        /*console.log(
+          "FUTURE TREE" + "\n" +
+          "name:" + this.variableList[i] + "\n" +
+          "meta.TreeIndex:" + meta.TreeIndex + "\n" +
+          "this.CurrentTreeIndex:" + this.CurrentTreeIndex + "\n" +
+          "indexToStop:" + indexToStop + "\n" +
+          "meta.BlockIndex:" + meta.BlockIndex + "\n"
+        );*/
+        continue;
+      }
+      else {
+        /*console.log(
+          "VALID TREE BLOCK" + "\n" +
+          "name:" + this.variableList[i] + "\n" +
+          "meta.TreeIndex:" + meta.TreeIndex + "\n" +
+          "this.CurrentTreeIndex:" + this.CurrentTreeIndex + "\n" +
+          "indexToStop:" + indexToStop + "\n" +
+          "meta.BlockIndex:" + meta.BlockIndex + "\n"
+        );*/
+        varList.push(this.variableList[i]);
+      }
+    }
+
+    //console.log("VISIBLEVARS" + JSON.stringify(varList));
+    return varList;
+}
 
 /**
  * Walk the workspace and update the list of variables to only contain ones in
@@ -217,6 +290,7 @@ Blockly.Workspace.prototype.updateVariableList = function(clearList) {
     // Update the list in place so that the flyout's references stay correct.
     if (clearList) {
       this.variableList.length = 0;
+      this.variableMetaDataList.length = 0;
     }
     var allVariables = Blockly.Variables.allUsedVariables(this);
     for (var i = 0; i < allVariables.length; i++) {
@@ -236,13 +310,19 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
   var variableIndex = this.variableIndexOf(oldName);
   var newVariableIndex = this.variableIndexOf(newName);
 
+  // don't allow rename to wzisting name
+  if (newVariableIndex != -1) {
+    alert("Error: Variable name is already in use.");
+    return;
+  }
+
   // We might be renaming to an existing name but with different case.  If so,
   // we will also update all of the blocks using the new name to have the
   // correct case.
-  if (newVariableIndex != -1 &&
+  /*if (newVariableIndex != -1 &&
       this.variableList[newVariableIndex] != newName) {
     var oldCase = this.variableList[newVariableIndex];
-  }
+  }*/
 
   Blockly.Events.setGroup(true);
   var blocks = this.getAllBlocks();
@@ -263,10 +343,12 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
   } else if (variableIndex != -1 && newVariableIndex != -1) {
     // Renaming one existing variable to another existing variable.
     this.variableList.splice(variableIndex, 1);
+    this.variableMetaDataList.splice(variableIndex, 1);
     // The case might have changed.
     this.variableList[newVariableIndex] = newName;
   } else {
     this.variableList.push(newName);
+    this.pushVarMetaData(newName);
     console.log('Tried to rename an non-existent variable.');
   }
 };
@@ -276,11 +358,24 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
  * TODO: #468
  * @param {string} name The new variable's name.
  */
-Blockly.Workspace.prototype.createVariable = function(name) {
+Blockly.Workspace.prototype.createVariable = function(name, opt_treeIndex, opt_blockIndex) {
   var index = this.variableIndexOf(name);
   if (index == -1) {
     this.variableList.push(name);
+    this.pushVarMetaData(name, opt_treeIndex, opt_blockIndex);
   }
+};
+
+Blockly.Workspace.prototype.pushVarMetaData = function(name, opt_treeIndex, opt_blockIndex) {
+  var treeIndex = (opt_treeIndex === undefined ? this.CurrentTreeIndex : opt_treeIndex);
+  var blockIndex = (opt_blockIndex === undefined ? 0 : opt_blockIndex);
+  this.variableMetaDataList.push({ TreeIndex: treeIndex, BlockIndex: blockIndex });
+
+  /*if (opt_treeIndex === undefined || opt_blockIndex === undefined ) {
+    var stack = new Error().stack;
+    console.log("PRINTING CALL STACK for " + name + ", opt_treeIndex: " + opt_treeIndex + ", opt_blockIndex: " + opt_blockIndex);
+    console.log( stack );
+  }*/
 };
 
 /**
@@ -340,6 +435,7 @@ Blockly.Workspace.prototype.deleteVariable = function(name) {
     }
     Blockly.Events.setGroup(false);
     this.variableList.splice(variableIndex, 1);
+    this.variableMetaDataList.splice(variableIndex, 1);
   }
 };
 

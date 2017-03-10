@@ -645,8 +645,8 @@ Blockly.WorkspaceSvg.prototype.paste = function(xmlBlock) {
  * TODO: #468
  * @param {string} name The new variable's name.
  */
-Blockly.WorkspaceSvg.prototype.createVariable = function(name) {
-  Blockly.WorkspaceSvg.superClass_.createVariable.call(this, name);
+Blockly.WorkspaceSvg.prototype.createVariable = function(name, opt_treeIndex, opt_blockIndex) {
+  Blockly.WorkspaceSvg.superClass_.createVariable.call(this, name, opt_treeIndex, opt_blockIndex);
   if (this.toolbox_ && this.toolbox_.flyout_) {
     this.toolbox_.refreshSelection();
   }

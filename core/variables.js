@@ -97,7 +97,7 @@ Blockly.Variables.allVariables = function(root) {
  * @return {!Array.<!Element>} Array of XML block elements.
  */
 Blockly.Variables.flyoutCategory = function(workspace) {
-  var variableList = workspace.variableList;
+  var variableList = workspace.GetVisibleVariableNames();
   variableList.sort(goog.string.caseInsensitiveCompare);
 
   var xmlList = [];

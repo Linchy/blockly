@@ -107,161 +107,134 @@ Blockly.FieldBezier.prototype.showEditor_ = function () {
   Blockly.WidgetDiv.show(this, this.sourceBlock_.RTL,
     Blockly.FieldBezier.widgetDispose_);
 
+    // this curve editor html and js is expected
+    // to already be on the page, so call function
+    // to show it
+    CurveEditor.Show(this);
+
   // Position the palette to line up with the field.
   // Record windowSize and scrollOffset before adding the palette.
-  var windowSize = goog.dom.getViewportSize();
-  var scrollOffset = goog.style.getViewportPageOffset(document);
-  var xy = this.getAbsoluteXY_();
-  var borderBBox = this.getScaledBBox_();
-  var div = Blockly.WidgetDiv.DIV;
+  // var windowSize = goog.dom.getViewportSize();
+  // var scrollOffset = goog.style.getViewportPageOffset(document);
+  // var xy = this.getAbsoluteXY_();
+  // var borderBBox = this.getScaledBBox_();
+  // var div = Blockly.WidgetDiv.DIV;
+
+ /* var workspace = Blockly.getMainWorkspace();
+  var metrics = workspace.getMetrics();
+
+        var x = pos.x - 40 - metrics.contentLeft;
+        var y = pos.y - (metrics.viewHeight / 2) - metrics.contentTop;
+  Blockly.WidgetDiv.position(0, 0, windowSize, scrollOffset, this.sourceBlock_.RTL);*/
+
+  // Blockly.WidgetDiv.DIV.style.left = 0 + 'px';
+  // Blockly.WidgetDiv.DIV.style.top = 0 + 'px';
+  // Blockly.WidgetDiv.DIV.style.width = (windowSize.width - 40) + 'px';
+  // Blockly.WidgetDiv.DIV.style.height = (windowSize.height - 40) + 'px';
 
   //div.style.width = "800px";
   // div.style.height = "400px";
 
-  var container = Blockly.createHtmlElement('div', {
-    "style": "width:auto; height:auto; background-color:whitesmoke; border-style: solid; border-width: 1px; padding: 5px"
-  }, div);
+  // var container = Blockly.createHtmlElement('div', {
+  //   "style": "width:100%; height:100%; background-color:whitesmoke; border-style: solid; border-width: 1px; padding: 5px"
+  // }, div);
 
-  //container.innerHTML = '<object type="text/html" style="width:100%; height:100%;" data="file:///C:/Git/GoogleBlockly/curvesjs/src/index.html"></object>';
-  container.innerHTML = `
-    <style>
-      .fill {
-        width: 100%;
-        height: 100%;
-      }
-      .curveEditor {
-        font-family: 'Arial', serif;
-      }
-      .grid {
-        border: solid black 1px;
-        margin: 5px;
-      }
-    </style>
-    <div class="curveEditor fill">
-      ${this.args.closedSurfaceOnly || this.args.curveOnly ? "" : '<input id="toggleCloseLoopCheckbox" type="checkbox" checked onchange="this.curve.ToggleCloseLoop(this.checked)">Close Loop</input><br />'}
-      <div class="fill">
-        Scale: <input id="scaleTextbox" type="text" oninput="this.curve.SetScale(this.value)" value="1.0"></input>
-        <input id="increaseScaleBtn" type="button" onclick="this.increaseScale()" value="+"></input>
-        <input id="decreaseScaleBtn" type="button" onclick="this.decreaseScale()" value="-"></input>
-        Mouse: <span></span>
-        <br />
-        <canvas class="grid" width="800" height="800"></canvas>
-        <br />
-        Marker Data: <input id="markerDataTextbox" type="text" onKeyUp="this.curve.MarkerDataOnChange(this.value)">
-      </div>
-    </div>`;
+  // //container.innerHTML = '<object type="text/html" style="width:100%; height:100%;" data="file:///C:/Git/GoogleBlockly/curvesjs/src/index.html"></object>';
+  // container.innerHTML = `
+  //   <style>
+  //     .fill {
+  //       width: 100%;
+  //       height: 100%;
+  //     }
+  //     .curveEditor {
+  //       font-family: 'Arial', serif;
+  //     }
+  //     .grid {
+  //       position:absolute;
+  //       width:90%;
+  //       height:90%;
+  //       display: block;
+  //       border: solid black 1px;
+  //       margin: 5px;
+  //     }
+  //     .marker {
+  //       position:absolute;
+  //     }
+  //   </style>
+  //   <div class="curveEditor fill">
+  //     ${this.args.closedSurfaceOnly || this.args.curveOnly ? "" : '<input id="toggleCloseLoopCheckbox" type="checkbox" checked onchange="this.curve.ToggleCloseLoop(this.checked)">Close Loop</input><br />'}
+  //     <div class="fill">
+  //       Scale: <input id="scaleTextbox" type="text" oninput="this.curve.SetScale(this.value)" value="1.0"></input>
+  //       <input id="increaseScaleBtn" type="button" onclick="this.increaseScale()" value="+"></input>
+  //       <input id="decreaseScaleBtn" type="button" onclick="this.decreaseScale()" value="-"></input>
+  //       Mouse: <span></span>
+  //       <br />
+  //       <canvas class="grid"></canvas>
+  //       <br />
+  //       <p class="marker">Marker Data: <input id="markerDataTextbox" type="text" onKeyUp="this.curve.MarkerDataOnChange(this.value)</p>">
+  //     </div>
+  //   </div>`;
 
-  //if (Blockly.FieldBezier.SharedCanvas == null) {
+  // //if (Blockly.FieldBezier.SharedCanvas == null) {
 
-  var self = this;
-  setTimeout(function () {
+  // var self = this;
+  // setTimeout(function () {
 
-    var toggleCloseLoopCheckbox = container.querySelector('#toggleCloseLoopCheckbox');
-    var scaleTextbox = container.querySelector('#scaleTextbox');
-    var increaseScaleBtn = container.querySelector('#increaseScaleBtn');
-    var decreaseScaleBtn = container.querySelector('#decreaseScaleBtn');
-    var markerDataTextbox = container.querySelector('#markerDataTextbox');
+  //   var toggleCloseLoopCheckbox = container.querySelector('#toggleCloseLoopCheckbox');
+  //   var scaleTextbox = container.querySelector('#scaleTextbox');
+  //   var increaseScaleBtn = container.querySelector('#increaseScaleBtn');
+  //   var decreaseScaleBtn = container.querySelector('#decreaseScaleBtn');
+  //   var markerDataTextbox = container.querySelector('#markerDataTextbox');
 
-    var ctx = container.querySelector('canvas').getContext("2d");
-    var span = container.querySelector('span');
+  //   var ctx = container.querySelector('canvas').getContext("2d");
+  //   var span = container.querySelector('span');
 
-    var curve = new Curve(ctx, self.valueDiv, self.getValue(), self.args, markerDataTextbox);
-    curve.setPointStyle('#222', 8);
-    curve.setLineStyle('#f5663F', 2);
+  //   var curve = new Curve(ctx, self.valueDiv, self.getValue(), self.args, markerDataTextbox);
+  //   curve.setPointStyle('#222', 8);
+  //   curve.setLineStyle('#f5663F', 2);
 
-    if (toggleCloseLoopCheckbox)
-      toggleCloseLoopCheckbox.curve = curve;
-    if (scaleTextbox)
-      scaleTextbox.curve = curve;
-    if (markerDataTextbox)
-      markerDataTextbox.curve = curve;
+  //   if (toggleCloseLoopCheckbox)
+  //     toggleCloseLoopCheckbox.curve = curve;
+  //   if (scaleTextbox)
+  //     scaleTextbox.curve = curve;
+  //   if (markerDataTextbox)
+  //     markerDataTextbox.curve = curve;
 
-    increaseScaleBtn.increaseScale = function() {
-      scaleTextbox.value = parseFloat(scaleTextbox.value) * 2;
-      curve.SetScale(scaleTextbox.value);
-    }
+  //   increaseScaleBtn.increaseScale = function() {
+  //     scaleTextbox.value = parseFloat(scaleTextbox.value) * 2;
+  //     curve.SetScale(scaleTextbox.value);
+  //   }
 
-    decreaseScaleBtn.decreaseScale = function() {
-      scaleTextbox.value = parseFloat(scaleTextbox.value) / 2;
-      curve.SetScale(scaleTextbox.value);
-    }
+  //   decreaseScaleBtn.decreaseScale = function() {
+  //     scaleTextbox.value = parseFloat(scaleTextbox.value) / 2;
+  //     curve.SetScale(scaleTextbox.value);
+  //   }
 
-    curve.on('mousemove', function () {
-      span.innerHTML = 'X: ' + this.mouseX + ', Y: ' + this.mouseY;
-    });
+  //   curve.on('mousemove', function () {
+  //     span.innerHTML = 'X: ' + this.mouseX + ', Y: ' + this.mouseY;
+  //   });
 
-    curve.on('drag', function () {
-      //console.log('point is being dragged');
-      self.RaiseChangeEvent(this);
-    });
+  //   curve.on('drag', function () {
+  //     //console.log('point is being dragged');
+  //     self.RaiseChangeEvent(this);
+  //   });
 
-    curve.on('newpoint', function () {
-      //console.log('point has been created');
-      self.RaiseChangeEvent(this);
-    });
+  //   curve.on('newpoint', function () {
+  //     //console.log('point has been created');
+  //     self.RaiseChangeEvent(this);
+  //   });
 
-    curve.on('removepoint', function () {
-      //console.log('point has beed removed');
-      self.RaiseChangeEvent(this);
-    });
+  //   curve.on('removepoint', function () {
+  //     //console.log('point has beed removed');
+  //     self.RaiseChangeEvent(this);
+  //   });
 
-    curve.on('togglecontrol', function () {
-      //console.log('toggled controlpoints');
-      self.RaiseChangeEvent(this);
-    });
+  //   curve.on('togglecontrol', function () {
+  //     //console.log('toggled controlpoints');
+  //     self.RaiseChangeEvent(this);
+  //   });
 
-    //   };
-
-
-    //   //Blockly.FieldBezier.SharedCanvas = canvas;     
-    //}
-
-    //picker.render(div);
-    //picker.setSelectedColor(this.getValue());
-
-    // Record paletteSize after adding the palette.
-    var paletteSize = goog.style.getSize(div);
-    //var paletteSize = {width: container.style.width, height: container.style.height }; // goog.style.getSize(div);
-
-    // Flip the palette vertically if off the bottom.
-    if (xy.y + paletteSize.height + borderBBox.height >=
-      windowSize.height + scrollOffset.y) {
-      xy.y -= paletteSize.height - 1;
-    } else {
-      xy.y += borderBBox.height - 1;
-    }
-    if (self.sourceBlock_.RTL) {
-      xy.x += borderBBox.width;
-      xy.x -= paletteSize.width;
-      // Don't go offscreen left.
-      if (xy.x < scrollOffset.x) {
-        xy.x = scrollOffset.x;
-      }
-    } else {
-      // Don't go offscreen right.
-      if (xy.x > windowSize.width + scrollOffset.x - paletteSize.width) {
-        xy.x = windowSize.width + scrollOffset.x - paletteSize.width;
-      }
-    }
-
-    // Configure event handler.
-    /* var thisField = this;
-     Blockly.FieldBezier.changeEventKey_ = goog.events.listen(picker,
-         goog.ui.ColorPicker.EventType.CHANGE,
-         function(event) {
-           var colour = event.target.getSelectedColor() || '#000000';
-           Blockly.WidgetDiv.hide();
-           if (thisField.sourceBlock_) {
-             // Call any validation function, and allow it to override.
-             colour = thisField.callValidator(colour);
-           }
-           if (colour !== null) {
-             thisField.setValue(colour);
-           }
-         });*/
-
-    Blockly.WidgetDiv.position(xy.x, xy.y, windowSize, scrollOffset, self.sourceBlock_.RTL);
-  }, 10);
+  // }, 10);
 };
 
 Blockly.FieldBezier.prototype.RaiseChangeEvent = function (curve) {
