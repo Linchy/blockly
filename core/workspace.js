@@ -319,10 +319,10 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
   // We might be renaming to an existing name but with different case.  If so,
   // we will also update all of the blocks using the new name to have the
   // correct case.
-  /*if (newVariableIndex != -1 &&
+  if (newVariableIndex != -1 &&
       this.variableList[newVariableIndex] != newName) {
     var oldCase = this.variableList[newVariableIndex];
-  }*/
+  }
 
   Blockly.Events.setGroup(true);
   var blocks = this.getAllBlocks();
