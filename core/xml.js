@@ -24,6 +24,10 @@
  */
 'use strict';
 
+/**
+ * @name Blockly.Xml
+ * @namespace
+ **/
 goog.provide('Blockly.Xml');
 
 goog.require('goog.asserts');
@@ -33,13 +37,14 @@ goog.require('goog.dom');
 /**
  * Encode a block tree as XML.
  * @param {!Blockly.Workspace} workspace The workspace containing blocks.
+ * @param {boolean} opt_noId True if the encoder should skip the block ids.
  * @return {!Element} XML document.
  */
-Blockly.Xml.workspaceToDom = function (workspace) {
+Blockly.Xml.workspaceToDom = function(workspace, opt_noId) {
   var xml = goog.dom.createDom('xml');
   var blocks = workspace.getTopBlocks(true);
   for (var i = 0, block; block = blocks[i]; i++) {
-    xml.appendChild(Blockly.Xml.blockToDomWithXY(block));
+    xml.appendChild(Blockly.Xml.blockToDomWithXY(block, opt_noId));
   }
   return xml;
 };
@@ -47,14 +52,15 @@ Blockly.Xml.workspaceToDom = function (workspace) {
 /**
  * Encode a block subtree as XML with XY coordinates.
  * @param {!Blockly.Block} block The root block to encode.
+ * @param {boolean} opt_noId True if the encoder should skip the block id.
  * @return {!Element} Tree of XML elements.
  */
-Blockly.Xml.blockToDomWithXY = function (block) {
+Blockly.Xml.blockToDomWithXY = function(block, opt_noId) {
   var width;  // Not used in LTR.
   if (block.workspace.RTL) {
     width = block.workspace.getWidth();
   }
-  var element = Blockly.Xml.blockToDom(block);
+  var element = Blockly.Xml.blockToDom(block, opt_noId);
   var xy = block.getRelativeToSurfaceXY();
   element.setAttribute('x',
     Math.round(block.workspace.RTL ? width - xy.x : xy.x));
@@ -65,12 +71,15 @@ Blockly.Xml.blockToDomWithXY = function (block) {
 /**
  * Encode a block subtree as XML.
  * @param {!Blockly.Block} block The root block to encode.
+ * @param {boolean} opt_noId True if the encoder should skip the block id.
  * @return {!Element} Tree of XML elements.
  */
-Blockly.Xml.blockToDom = function (block) {
+Blockly.Xml.blockToDom = function(block, opt_noId) {
   var element = goog.dom.createDom(block.isShadow() ? 'shadow' : 'block');
   element.setAttribute('type', block.type);
-  element.setAttribute('id', block.id);
+  if (!opt_noId) {
+    element.setAttribute('id', block.id);
+  }
   if (block.mutationToDom) {
     // Custom data for an advanced block.
     var mutation = block.mutationToDom();
@@ -125,7 +134,7 @@ Blockly.Xml.blockToDom = function (block) {
         container.appendChild(Blockly.Xml.cloneShadow_(shadow));
       }
       if (childBlock) {
-        container.appendChild(Blockly.Xml.blockToDom(childBlock));
+        container.appendChild(Blockly.Xml.blockToDom(childBlock, opt_noId));
         empty = false;
       }
     }
@@ -156,7 +165,7 @@ Blockly.Xml.blockToDom = function (block) {
   var nextBlock = block.getNextBlock();
   if (nextBlock) {
     var container = goog.dom.createDom('next', null,
-      Blockly.Xml.blockToDom(nextBlock));
+        Blockly.Xml.blockToDom(nextBlock, opt_noId));
     element.appendChild(container);
   }
   var shadow = block.nextConnection && block.nextConnection.getShadowDom();
@@ -269,6 +278,7 @@ Blockly.Xml.textToDom = function (text) {
  * Decode an XML DOM and create blocks on the workspace.
  * @param {!Element} xml XML DOM.
  * @param {!Blockly.Workspace} workspace The workspace.
+ * @return {Array.<string>} An array containing new block ids.
  */
 Blockly.Xml.domToWorkspace = function (xml, workspace) {
   if (xml instanceof Blockly.Workspace) {
@@ -282,6 +292,7 @@ Blockly.Xml.domToWorkspace = function (xml, workspace) {
   if (workspace.RTL) {
     width = workspace.getWidth();
   }
+  var newBlockIds = []; // A list of block ids added by this call.
   Blockly.Field.startCache();
   // Safari 7.1.3 is known to provide node lists with extra references to
   // children beyond the lists' length.  Trust the length, do not use the
@@ -290,6 +301,11 @@ Blockly.Xml.domToWorkspace = function (xml, workspace) {
   var existingGroup = Blockly.Events.getGroup();
   if (!existingGroup) {
     Blockly.Events.setGroup(true);
+  }
+
+  // Disable workspace resizes as an optimization.
+  if (workspace.setResizesEnabled) {
+    workspace.setResizesEnabled(false);
   }
   for (var i = 0; i < childCount; i++) {
     var xmlChild = xml.childNodes[i];
@@ -300,6 +316,7 @@ Blockly.Xml.domToWorkspace = function (xml, workspace) {
       // that means an undo is in progress.  Such a block is expected
       // to be moved to a nested destination in the next operation.
       var block = Blockly.Xml.domToBlock(xmlChild, workspace);
+      newBlockIds.push(block.id);
       var blockX = parseInt(xmlChild.getAttribute('x'), 10);
       var blockY = parseInt(xmlChild.getAttribute('y'), 10);
       if (!isNaN(blockX) && !isNaN(blockY)) {
@@ -315,6 +332,65 @@ Blockly.Xml.domToWorkspace = function (xml, workspace) {
   Blockly.Field.stopCache();
 
   workspace.updateVariableList(false);
+  // Re-enable workspace resizing.
+  if (workspace.setResizesEnabled) {
+    workspace.setResizesEnabled(true);
+  }
+  return newBlockIds;
+};
+
+/**
+ * Decode an XML DOM and create blocks on the workspace. Position the new
+ * blocks immediately below prior blocks, aligned by their starting edge.
+ * @param {!Element} xml The XML DOM.
+ * @param {!Blockly.Workspace} workspace The workspace to add to.
+ * @return {Array.<string>} An array containing new block ids.
+ */
+Blockly.Xml.appendDomToWorkspace = function(xml, workspace) {
+  var bbox; //bounding box of the current blocks
+  // first check if we have a workspaceSvg otherwise the block have no shape
+  // and the position does not matter
+  if (workspace.hasOwnProperty('scale')) {
+    var savetab = Blockly.BlockSvg.TAB_WIDTH;
+    try {
+      Blockly.BlockSvg.TAB_WIDTH = 0;
+      var bbox = workspace.getBlocksBoundingBox();
+    } finally {
+      Blockly.BlockSvg.TAB_WIDTH = savetab;
+    }
+  }
+  // load the new blocks into the workspace and get the ids of the new blocks
+  var newBlockIds = Blockly.Xml.domToWorkspace(xml,workspace);
+  if (bbox && bbox.height) { // check if any previous block
+    var offsetY = 0; // offset to add to y of the new block
+    var offsetX = 0;
+    var farY = bbox.y + bbox.height; //bottom position
+    var topX = bbox.x; // x of bounding box
+    // check position of the new blocks
+    var newX = Infinity; // x of top corner
+    var newY = Infinity; // y of top corner
+    for (var i = 0; i < newBlockIds.length; i++) {
+      var blockXY = workspace.getBlockById(newBlockIds[i]).getRelativeToSurfaceXY();
+      if (blockXY.y < newY) {
+        newY = blockXY.y;
+      }
+      if (blockXY.x  < newX) { //if we align also on x
+        newX = blockXY.x;
+      }
+    }
+    offsetY = farY - newY + Blockly.BlockSvg.SEP_SPACE_Y;
+    offsetX = topX - newX;
+    // move the new blocks to append them at the bottom
+    var width;  // Not used in LTR.
+    if (workspace.RTL) {
+      width = workspace.getWidth();
+    }
+    for (var i = 0; i < newBlockIds.length; i++) {
+      var block = workspace.getBlockById(newBlockIds[i]);
+      block.moveBy(workspace.RTL ? width - offsetX : offsetX, offsetY);
+    }
+  }
+  return newBlockIds;
 };
 
 /**
@@ -348,7 +424,7 @@ Blockly.Xml.domToBlock = function (xmlBlock, workspace) {
       for (var i = blocks.length - 1; i >= 0; i--) {
         blocks[i].render(false);
       }
-      // Populating the connection database may be defered until after the
+      // Populating the connection database may be deferred until after the
       // blocks have rendered.
       setTimeout(function () {
         if (topBlock.workspace) {  // Check that the block hasn't been deleted.
@@ -418,7 +494,7 @@ Blockly.Xml.domToBlockHeadless_ = function (xmlBlock, workspace) {
         if (block.domToMutation) {
           block.domToMutation(xmlChild);
           if (block.initSvg) {
-            // Mutation may have added some elements that need initalizing.
+            // Mutation may have added some elements that need initializing.
             block.initSvg();
           }
         }
@@ -538,6 +614,9 @@ Blockly.Xml.domToBlockHeadless_ = function (xmlBlock, workspace) {
       goog.asserts.assert(child.isShadow(),
         'Shadow block not allowed non-shadow child.');
     }
+    // Ensure this block doesn't have any variable inputs.
+    goog.asserts.assert(block.getVars().length == 0,
+        'Shadow blocks cannot have variable fields.');
     block.setShadow(true);
   }
   return block;
