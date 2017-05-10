@@ -43,6 +43,9 @@ goog.require('goog.ui.MenuItem');
  */
 Blockly.ContextMenu.currentBlock = null;
 
+Blockly.ContextMenu.LastLeft = 0;
+Blockly.ContextMenu.LastTop = 0;
+
 /**
  * Construct the menu based on the list of options and show the menu.
  * @param {!Event} e Mouse event.
@@ -109,6 +112,8 @@ Blockly.ContextMenu.show = function(e, options, rtl) {
     }
   }
   Blockly.WidgetDiv.position(x, y, windowSize, scrollOffset, rtl);
+  Blockly.ContextMenu.LastLeft = parseInt(Blockly.WidgetDiv.DIV.style.left);
+  Blockly.ContextMenu.LastTop = parseInt(Blockly.WidgetDiv.DIV.style.top);
 
   menu.setAllowAutoFocus(true);
   // 1ms delay is required for focusing on context menus because some other

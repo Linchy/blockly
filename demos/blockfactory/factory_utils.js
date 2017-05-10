@@ -429,8 +429,8 @@ FactoryUtils.getFieldsJs_ = function(block) {
         case 'field_bezier':
           // Result: new Blockly.FieldBezier("TRUE"), "NAME");
           fields.push('new Blockly.FieldBezier(' +
-              FactoryUtils.escapeString(block.getFieldValue('ARGS')) + '), ' +
-              FactoryUtils.escapeString(block.getFieldValue('FIELDNAME')));
+              JSON.stringify(block.getFieldValue('ARGS')) + '), ' +
+              JSON.stringify(block.getFieldValue('FIELDNAME')));
           break;
         case 'field_checkbox':
           // Result: new Blockly.FieldCheckbox('TRUE'), 'CHECK'

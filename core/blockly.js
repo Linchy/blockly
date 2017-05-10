@@ -188,13 +188,15 @@ Blockly.svgResize = function (workspace) {
   mainWorkspace.resize();
 };
 
+Blockly.disableKeyboardInput = false;
+
 /**
  * Handle a key-down on SVG drawing surface.
  * @param {!Event} e Key down event.
  * @private
  */
 Blockly.onKeyDown_ = function (e) {
-  if (Blockly.mainWorkspace.options.readOnly || Blockly.utils.isTargetInput(e)) {
+  if (Blockly.disableKeyboardInput || Blockly.mainWorkspace.options.readOnly || Blockly.utils.isTargetInput(e)) {
     // No key actions on readonly workspaces.
     // When focused on an HTML text input widget, don't trap any keys.
     return;
@@ -266,18 +268,18 @@ Blockly.terminateDrag_ = function () {
  * @param {!Blockly.Block} block Block to be copied.
  * @private
  */
-Blockly.copy_ = function (block) {
-  var xmlBlock = Blockly.Xml.blockToDom(block);
-  if (Blockly.dragMode_ != Blockly.DRAG_FREE) {
-    Blockly.Xml.deleteNext(xmlBlock);
-  }
-  // Encode start position in XML.
-  var xy = block.getRelativeToSurfaceXY();
-  xmlBlock.setAttribute('x', block.RTL ? -xy.x : xy.x);
-  xmlBlock.setAttribute('y', xy.y);
-  Blockly.clipboardXml_ = xmlBlock;
-  Blockly.clipboardSource_ = block.workspace;
-};
+// Blockly.copy_ = function (block) {
+//   var xmlBlock = Blockly.Xml.blockToDom(block, false, true);
+//   if (Blockly.dragMode_ != Blockly.DRAG_FREE) {
+//     Blockly.Xml.deleteNext(xmlBlock);
+//   }
+//   // Encode start position in XML.
+//   //var xy = block.getRelativeToSurfaceXY();
+//   xmlBlock.setAttribute('x', block.RTL ? -xy.x : xy.x);
+//   xmlBlock.setAttribute('y', xy.y);
+//   Blockly.clipboardXml_ = xmlBlock;
+//   Blockly.clipboardSource_ = block.workspace;
+// };
 
 /**
  * Duplicate this block and its children.
@@ -287,7 +289,7 @@ Blockly.copy_ = function (block) {
 Blockly.duplicate_ = function (block) {
 
   // serialise
-  var xml = Blockly.Xml.blockToDom(block);
+  var xml = Blockly.Xml.blockToDom(block, false, true);
 
   // deserialise
   Blockly.isCurrentlyCreatingDuplicateBlocks = true;
@@ -345,7 +347,7 @@ Blockly.copy_ = function (block) {
 
   if (block.workspace.copyListener != null) {
     
-    var dom = Blockly.Xml.blockToDom(block);
+    var dom = Blockly.Xml.blockToDom(block, false, true);
     var xml = Blockly.Xml.domToText(dom);
 
     var func = block.workspace.copyListener;

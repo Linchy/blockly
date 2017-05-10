@@ -74,7 +74,7 @@ Blockly.Xml.blockToDomWithXY = function(block, opt_noId) {
  * @param {boolean} opt_noId True if the encoder should skip the block id.
  * @return {!Element} Tree of XML elements.
  */
-Blockly.Xml.blockToDom = function(block, opt_noId) {
+Blockly.Xml.blockToDom = function(block, opt_noId, opt_dontIncludeNextBlock) {
   var element = goog.dom.createDom(block.isShadow() ? 'shadow' : 'block');
   element.setAttribute('type', block.type);
   if (!opt_noId) {
@@ -162,15 +162,20 @@ Blockly.Xml.blockToDom = function(block, opt_noId) {
     element.setAttribute('editable', false);
   }
 
-  var nextBlock = block.getNextBlock();
-  if (nextBlock) {
-    var container = goog.dom.createDom('next', null,
-        Blockly.Xml.blockToDom(nextBlock, opt_noId));
-    element.appendChild(container);
+  if (opt_dontIncludeNextBlock) {
   }
-  var shadow = block.nextConnection && block.nextConnection.getShadowDom();
-  if (shadow && (!nextBlock || !nextBlock.isShadow())) {
-    container.appendChild(Blockly.Xml.cloneShadow_(shadow));
+  else
+  {
+    var nextBlock = block.getNextBlock();
+    if (nextBlock) {
+      var container = goog.dom.createDom('next', null,
+          Blockly.Xml.blockToDom(nextBlock, opt_noId));
+      element.appendChild(container);
+    }
+    var shadow = block.nextConnection && block.nextConnection.getShadowDom();
+    if (shadow && (!nextBlock || !nextBlock.isShadow())) {
+      container.appendChild(Blockly.Xml.cloneShadow_(shadow));
+    }
   }
 
   return element;
