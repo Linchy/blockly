@@ -61,6 +61,8 @@ Blockly.Msg.CONTROLS_WHILEUNTIL_OPERATOR_UNTIL = "تکرار تا وةختێ گ�
 Blockly.Msg.CONTROLS_WHILEUNTIL_OPERATOR_WHILE = "تکرار در حالی که";
 Blockly.Msg.CONTROLS_WHILEUNTIL_TOOLTIP_UNTIL = "تا زمانی که یک مقدار ناصحیح است، چند عبارت را انجام بده.";
 Blockly.Msg.CONTROLS_WHILEUNTIL_TOOLTIP_WHILE = "تا زمانی که یک مقدار صحیح است، چند عبارت را انجام بده.";
+Blockly.Msg.COPY_BLOCK = "Copy";  // untranslated
+Blockly.Msg.COPY_SET_BLOCK = "Copy Set";  // untranslated
 Blockly.Msg.DELETE_ALL_BLOCKS = "حةذف کؤل %1 بلاکةل?";
 Blockly.Msg.DELETE_BLOCK = "پاک کردن بلاک";
 Blockly.Msg.DELETE_VARIABLE = "Delete the '%1' variable";  // untranslated
@@ -68,6 +70,7 @@ Blockly.Msg.DELETE_VARIABLE_CONFIRMATION = "Delete %1 uses of the '%2' variable?
 Blockly.Msg.DELETE_X_BLOCKS = "حةذف %1 بلاکةل";
 Blockly.Msg.DISABLE_BLOCK = "إ کار کةتن(غیرفعال‌سازی) بلاک";
 Blockly.Msg.DUPLICATE_BLOCK = "کؤپی کردن";
+Blockly.Msg.DUPLICATE_SET_BLOCK = "Duplicate Set";  // untranslated
 Blockly.Msg.ENABLE_BLOCK = "إ کارآشتن(فعال)بلاک";
 Blockly.Msg.EXPAND_ALL = "کةلنگآ کردِن بلاکةل";
 Blockly.Msg.EXPAND_BLOCK = "کةلنگآ کردِن بلاک";
@@ -284,6 +287,7 @@ Blockly.Msg.MATH_TRIG_TOOLTIP_TAN = "بازگرداندن تانژانت یک د
 Blockly.Msg.NEW_VARIABLE = "متغیر تازه...";
 Blockly.Msg.NEW_VARIABLE_TITLE = "نام متغیر تازه:";
 Blockly.Msg.ORDINAL_NUMBER_SUFFIX = "";  // untranslated
+Blockly.Msg.PASTE_BLOCK = "Paste";  // untranslated
 Blockly.Msg.PROCEDURES_ALLOW_STATEMENTS = "اجازه اظهارات";
 Blockly.Msg.PROCEDURES_BEFORE_PARAMS = "با:";
 Blockly.Msg.PROCEDURES_CALLNORETURN_HELPURL = "https://en.wikipedia.org/wiki/Procedure_%28computer_science%29";
