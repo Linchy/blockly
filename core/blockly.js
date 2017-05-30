@@ -322,11 +322,8 @@ Blockly.isCurrentlyCreatingDuplicateBlocks = false;
  */
 Blockly.duplicateSet_ = function (block) {
 
-  // get root
-  var rootBlock = block.getRootBlock();
-
   // serialise
-  var xml = Blockly.Xml.blockToDom(rootBlock);
+  var xml = Blockly.Xml.blockToDom(block);
 
   // deserialise
   Blockly.isCurrentlyCreatingDuplicateBlocks = true;
@@ -334,7 +331,7 @@ Blockly.duplicateSet_ = function (block) {
   Blockly.isCurrentlyCreatingDuplicateBlocks = false;
 
   // move above the original block
-  var xy = rootBlock.getRelativeToSurfaceXY();
+  var xy = block.getRelativeToSurfaceXY();
   newBlock.moveBy(xy.x + Blockly.SNAP_RADIUS, xy.y + Blockly.SNAP_RADIUS * (newBlock.RTL ? -2 : 2));
 };
 

@@ -61,6 +61,7 @@ Blockly.Workspace = function(opt_options) {
   this.listeners_ = [];
   this.copyListener = null;
   this.pasteListener = null;
+  this.renameListener = null;
   /**
    * @type {!Array.<!Blockly.Events.Abstract>}
    * @private
@@ -111,6 +112,7 @@ Blockly.Workspace.prototype.dispose = function() {
   this.listeners_.length = 0;
   this.copyListener = null;
   this.pasteListener = null;
+  this.renameListener = null;
   this.clear();
   // Remove from workspace database.
   delete Blockly.Workspace.WorkspaceDB_[this.id];
@@ -298,13 +300,15 @@ Blockly.Workspace.prototype.updateVariableList = function(clearList) {
  * @param {string} oldName Variable to rename.
  * @param {string} newName New variable name.
  */
-Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
+Blockly.Workspace.prototype.renameVariable = function(oldName, newName, opt_dontCheckIfExisting) {
   // Find the old name in the list.
   var variableIndex = this.variableIndexOf(oldName);
   var newVariableIndex = this.variableIndexOf(newName);
 
   // don't allow rename to wzisting name
-  if (newVariableIndex != -1) {
+  if (opt_dontCheckIfExisting == true)
+  {}
+  else if (newVariableIndex != -1) {
     alert("Error: Variable name is already in use.");
     return;
   }
@@ -343,6 +347,11 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
     this.variableList.push(newName);
     this.pushVarMetaData(newName);
     console.log('Tried to rename an non-existent variable.');
+  }
+
+  if (this.renameListener != null) {
+    var func = this.renameListener;
+    func(oldName, newName);
   }
 };
 
@@ -590,13 +599,24 @@ Blockly.Workspace.prototype.setCopyListener = function(func) {
 };
 
 /**
- * Fire on copy to clipboard
+ * Fire on paste from clipboard
  * @param {!Function} func Function to call.
  * @return {!Function} Function that can be passed to
  *     removeChangeListener.
  */
 Blockly.Workspace.prototype.setPasteListener = function(func) {
   this.pasteListener = func;
+  return func;
+};
+
+/**
+ * Fire on rename
+ * @param {!Function} func Function to call.
+ * @return {!Function} Function that can be passed to
+ *     removeChangeListener.
+ */
+Blockly.Workspace.prototype.setRenameListener = function(func) {
+  this.renameListener = func;
   return func;
 };
 

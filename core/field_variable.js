@@ -192,8 +192,10 @@ Blockly.FieldVariable.dropdownCreate = function() {
   this.renameVarItemIndex_ = variableList.length;
   variableList.push(Blockly.Msg.RENAME_VARIABLE);
 
-  this.deleteVarItemIndex_ = variableList.length;
-  variableList.push(Blockly.Msg.DELETE_VARIABLE.replace('%1', name));
+  // REMOVED DELETE AS WE DONT WANT USER TO BE ABLE TO DO THIS FROM MENU
+  //this.deleteVarItemIndex_ = variableList.length;
+  //variableList.push(Blockly.Msg.DELETE_VARIABLE.replace('%1', name));
+
   // Variables are not language-specific, use the name as both the user-facing
   // text and the internal representation.
   var options = [];
