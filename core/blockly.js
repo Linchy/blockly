@@ -361,8 +361,7 @@ Blockly.copySet_ = function (block) {
 
   if (block.workspace.copyListener != null) {
 
-    var rootBlock = block.getRootBlock();
-    var dom = Blockly.Xml.blockToDom(rootBlock);
+    var dom = Blockly.Xml.blockToDom(block);
     var xml = Blockly.Xml.domToText(dom);
 
     var func = block.workspace.copyListener;
