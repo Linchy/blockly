@@ -234,7 +234,7 @@ Blockly.Events.getGroup = function() {
  */
 Blockly.Events.setGroup = function(state) {
   if (typeof state == 'boolean') {
-    Blockly.Events.group_ = state ? Blockly.genUid() : '';
+    Blockly.Events.group_ = state ? Blockly.utils.genUid() : '';
   } else {
     Blockly.Events.group_ = state;
   }
@@ -307,7 +307,7 @@ Blockly.Events.Abstract = function(block) {
  */
 Blockly.Events.Abstract.prototype.toJson = function() {
   var json = {
-    'type': this.type,
+    'type': this.type
   };
   if (this.blockId) {
     json['blockId'] = this.blockId;
@@ -354,7 +354,12 @@ Blockly.Events.Create = function(block) {
     return;  // Blank event to be populated by fromJson.
   }
   Blockly.Events.Create.superClass_.constructor.call(this, block);
-  this.xml = Blockly.Xml.blockToDomWithXY(block);
+
+  if (block.workspace.rendered) {
+    this.xml = Blockly.Xml.blockToDomWithXY(block);
+  } else {
+    this.xml = Blockly.Xml.blockToDom(block);
+  }
   this.ids = Blockly.Events.getDescendantIds_(block);
 };
 goog.inherits(Blockly.Events.Create, Blockly.Events.Abstract);
@@ -423,7 +428,12 @@ Blockly.Events.Delete = function(block) {
     throw 'Connected blocks cannot be deleted.';
   }
   Blockly.Events.Delete.superClass_.constructor.call(this, block);
-  this.oldXml = Blockly.Xml.blockToDomWithXY(block);
+
+  if (block.workspace.rendered) {
+    this.oldXml = Blockly.Xml.blockToDomWithXY(block);
+  } else {
+    this.oldXml = Blockly.Xml.blockToDom(block);
+  }
   this.ids = Blockly.Events.getDescendantIds_(block);
 };
 goog.inherits(Blockly.Events.Delete, Blockly.Events.Abstract);
@@ -628,6 +638,10 @@ Blockly.Events.Move.prototype.toJson = function() {
   var json = Blockly.Events.Move.superClass_.toJson.call(this);
   if (this.newParentId) {
     json['newParentId'] = this.newParentId;
+  
+    var workspace = Blockly.Workspace.getById(this.workspaceId);
+    var parentBlock = workspace.getBlockById(this.newParentId);
+    json['newParentXml'] = Blockly.Xml.domToText(Blockly.Xml.blockToDomWithXY(parentBlock));
   }
   if (this.newInputName) {
     json['newInputName'] = this.newInputName;

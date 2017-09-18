@@ -38,7 +38,7 @@ goog.require('goog.math');
  */
 Blockly.Workspace = function(opt_options) {
   /** @type {string} */
-  this.id = Blockly.genUid();
+  this.id = Blockly.utils.genUid();
   Blockly.Workspace.WorkspaceDB_[this.id] = this;
   /** @type {!Blockly.Options} */
   this.options = opt_options || {};
@@ -59,6 +59,9 @@ Blockly.Workspace = function(opt_options) {
    * @private
    */
   this.listeners_ = [];
+  this.copyListener = null;
+  this.pasteListener = null;
+  this.renameListener = null;
   /**
    * @type {!Array.<!Blockly.Events.Abstract>}
    * @private
@@ -75,11 +78,18 @@ Blockly.Workspace = function(opt_options) {
    */
   this.blockDB_ = Object.create(null);
   /*
-   * @type {!Array.<!string>}
+   * @type {!Array.<string>}
    * A list of all of the named variables in the workspace, including variables
    * that are not currently in use.
    */
   this.variableList = [];
+  this.variableMetaDataList = [];
+
+  /*
+   * @type {int}
+   * Index of current workspace, whic his used to filter visible vars with
+   */
+  this.CurrentTreeIndex = 0;
 };
 
 /**
@@ -100,6 +110,9 @@ Blockly.Workspace.prototype.MAX_UNDO = 1024;
  */
 Blockly.Workspace.prototype.dispose = function() {
   this.listeners_.length = 0;
+  this.copyListener = null;
+  this.pasteListener = null;
+  this.renameListener = null;
   this.clear();
   // Remove from workspace database.
   delete Blockly.Workspace.WorkspaceDB_[this.id];
@@ -127,6 +140,7 @@ Blockly.Workspace.prototype.addTopBlock = function(block) {
     for (var i = 0; i < variables.length; i++) {
       if (this.variableList.indexOf(variables[i]) == -1) {
         this.variableList.push(variables[i]);
+        this.pushVarMetaData(variables[i]);
       }
     }
   }
@@ -193,7 +207,72 @@ Blockly.Workspace.prototype.clear = function() {
   }
 
   this.variableList.length = 0;
+  this.variableMetaDataList.length = 0;
 };
+
+Blockly.Workspace.prototype.GetVisibleVariableNames = function(opt_endBlock) {
+    var varList = [];
+
+    //console.log("ALLVARS:" + JSON.stringify(this.variableList));
+    //console.log("ALLMETA:" + JSON.stringify(this.variableMetaDataList));
+
+    var indexToStop = -1;
+
+    if (opt_endBlock) {
+      var orderedBlocks = this.getTopBlocks(true);
+      indexToStop = orderedBlocks.indexOf(opt_endBlock);
+    }
+
+    for (var i = 0; i < this.variableList.length; i++) {
+
+      // shouldn't happen
+      if (i >= this.variableMetaDataList.length)
+        break;
+
+      var meta = this.variableMetaDataList[i];
+        
+        /*console.log(
+          "meta:" + JSON.stringify(meta) + "\n"
+        );*/
+
+      if (meta.TreeIndex == this.CurrentTreeIndex && indexToStop != -1 && meta.BlockIndex > indexToStop) {
+        /*console.log(
+          "SAME TREE, FUTURE BLOCK" + "\n" +
+          "name:" + this.variableList[i] + "\n" +
+          "meta.TreeIndex:" + meta.TreeIndex + "\n" +
+          "this.CurrentTreeIndex:" + this.CurrentTreeIndex + "\n" +
+          "indexToStop:" + indexToStop + "\n" +
+          "meta.BlockIndex:" + meta.BlockIndex + "\n"
+        );*/
+        continue;
+      }
+      else if (meta.TreeIndex > this.CurrentTreeIndex) {
+        /*console.log(
+          "FUTURE TREE" + "\n" +
+          "name:" + this.variableList[i] + "\n" +
+          "meta.TreeIndex:" + meta.TreeIndex + "\n" +
+          "this.CurrentTreeIndex:" + this.CurrentTreeIndex + "\n" +
+          "indexToStop:" + indexToStop + "\n" +
+          "meta.BlockIndex:" + meta.BlockIndex + "\n"
+        );*/
+        continue;
+      }
+      else {
+        /*console.log(
+          "VALID TREE BLOCK" + "\n" +
+          "name:" + this.variableList[i] + "\n" +
+          "meta.TreeIndex:" + meta.TreeIndex + "\n" +
+          "this.CurrentTreeIndex:" + this.CurrentTreeIndex + "\n" +
+          "indexToStop:" + indexToStop + "\n" +
+          "meta.BlockIndex:" + meta.BlockIndex + "\n"
+        );*/
+        varList.push(this.variableList[i]);
+      }
+    }
+
+    //console.log("VISIBLEVARS" + JSON.stringify(varList));
+    return varList;
+}
 
 /**
  * Walk the workspace and update the list of variables to only contain ones in
@@ -206,6 +285,7 @@ Blockly.Workspace.prototype.updateVariableList = function(clearList) {
     // Update the list in place so that the flyout's references stay correct.
     if (clearList) {
       this.variableList.length = 0;
+      this.variableMetaDataList.length = 0;
     }
     var allVariables = Blockly.Variables.allUsedVariables(this);
     for (var i = 0; i < allVariables.length; i++) {
@@ -220,27 +300,35 @@ Blockly.Workspace.prototype.updateVariableList = function(clearList) {
  * @param {string} oldName Variable to rename.
  * @param {string} newName New variable name.
  */
-Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
+Blockly.Workspace.prototype.renameVariable = function(oldName, newName, opt_dontCheckIfExisting) {
   // Find the old name in the list.
-  var variableIndex = this.variableIndexOf(oldName);
-  var newVariableIndex = this.variableIndexOf(newName);
+  var variableIndex = this.caseSensitiveVariableIndexOf(oldName);
+  var newVariableIndex = this.caseSensitiveVariableIndexOf(newName);
+
+  // don't allow rename to existing name
+  if (opt_dontCheckIfExisting == true)
+  {}
+  else if (newVariableIndex != -1) {
+    alert("Error: Variable name is already in use.");
+    return;
+  }
 
   // We might be renaming to an existing name but with different case.  If so,
   // we will also update all of the blocks using the new name to have the
   // correct case.
-  if (newVariableIndex != -1 &&
-      this.variableList[newVariableIndex] != newName) {
-    var oldCase = this.variableList[newVariableIndex];
-  }
+  // if (newVariableIndex != -1 &&
+  //     this.variableList[newVariableIndex] != newName) {
+  //   var oldCase = this.variableList[newVariableIndex];
+  // }
 
   Blockly.Events.setGroup(true);
   var blocks = this.getAllBlocks();
   // Iterate through every block.
   for (var i = 0; i < blocks.length; i++) {
     blocks[i].renameVar(oldName, newName);
-    if (oldCase) {
-      blocks[i].renameVar(oldCase, newName);
-    }
+    // if (oldCase) {
+    //   blocks[i].renameVar(oldCase, newName);
+    // }
   }
   Blockly.Events.setGroup(false);
 
@@ -251,12 +339,19 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
     this.variableList[variableIndex] = newName;
   } else if (variableIndex != -1 && newVariableIndex != -1) {
     // Renaming one existing variable to another existing variable.
-    this.variableList.splice(variableIndex, 1);
-    // The case might have changed.
+    this.variableMetaDataList.splice(variableIndex, 1);
+    // The case might have changed, so we update the destination ID.
     this.variableList[newVariableIndex] = newName;
+    this.variableList.splice(variableIndex, 1);
   } else {
     this.variableList.push(newName);
+    this.pushVarMetaData(newName);
     console.log('Tried to rename an non-existent variable.');
+  }
+
+  if (this.renameListener != null) {
+    var func = this.renameListener;
+    func(oldName, newName);
   }
 };
 
@@ -265,11 +360,24 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName) {
  * TODO: #468
  * @param {string} name The new variable's name.
  */
-Blockly.Workspace.prototype.createVariable = function(name) {
+Blockly.Workspace.prototype.createVariable = function(name, opt_treeIndex, opt_blockIndex) {
   var index = this.variableIndexOf(name);
   if (index == -1) {
     this.variableList.push(name);
+    this.pushVarMetaData(name, opt_treeIndex, opt_blockIndex);
   }
+};
+
+Blockly.Workspace.prototype.pushVarMetaData = function(name, opt_treeIndex, opt_blockIndex) {
+  var treeIndex = (opt_treeIndex === undefined ? this.CurrentTreeIndex : opt_treeIndex);
+  var blockIndex = (opt_blockIndex === undefined ? 0 : opt_blockIndex);
+  this.variableMetaDataList.push({ TreeIndex: treeIndex, BlockIndex: blockIndex });
+
+  /*if (opt_treeIndex === undefined || opt_blockIndex === undefined ) {
+    var stack = new Error().stack;
+    console.log("PRINTING CALL STACK for " + name + ", opt_treeIndex: " + opt_treeIndex + ", opt_blockIndex: " + opt_blockIndex);
+    console.log( stack );
+  }*/
 };
 
 /**
@@ -297,39 +405,61 @@ Blockly.Workspace.prototype.getVariableUses = function(name) {
 };
 
 /**
- * Delete a variables and all of its uses from this workspace.
+ * Delete a variables and all of its uses from this workspace. May prompt the
+ * user for confirmation.
  * @param {string} name Name of variable to delete.
  */
 Blockly.Workspace.prototype.deleteVariable = function(name) {
   var variableIndex = this.variableIndexOf(name);
-  if (variableIndex != -1) {
-    var uses = this.getVariableUses(name);
-    if (uses.length > 1) {
-      for (var i = 0, block; block = uses[i]; i++) {
-        if (block.type == 'procedures_defnoreturn' ||
-          block.type == 'procedures_defreturn') {
-          var procedureName = block.getFieldValue('NAME');
-          window.alert(
-              Blockly.Msg.CANNOT_DELETE_VARIABLE_PROCEDURE.replace('%1', name).
-              replace('%2', procedureName));
-          return;
-        }
-      }
-      var ok = window.confirm(
-          Blockly.Msg.DELETE_VARIABLE_CONFIRMATION.replace('%1', uses.length).
-          replace('%2', name));
-      if (!ok) {
-        return;
-      }
-    }
-
-    Blockly.Events.setGroup(true);
-    for (var i = 0; i < uses.length; i++) {
-      uses[i].dispose(true, false);
-    }
-    Blockly.Events.setGroup(false);
-    this.variableList.splice(variableIndex, 1);
+  if (variableIndex == -1) {
+    return;
   }
+  // Check whether this variable is a function parameter before deleting.
+  var uses = this.getVariableUses(name);
+  for (var i = 0, block; block = uses[i]; i++) {
+    if (block.type == 'procedures_defnoreturn' ||
+      block.type == 'procedures_defreturn') {
+      var procedureName = block.getFieldValue('NAME');
+      Blockly.alert(
+          Blockly.Msg.CANNOT_DELETE_VARIABLE_PROCEDURE.
+          replace('%1', name).
+          replace('%2', procedureName));
+      return;
+    }
+  }
+
+  var workspace = this;
+  if (uses.length > 1) {
+    // Confirm before deleting multiple blocks.
+    Blockly.confirm(
+        Blockly.Msg.DELETE_VARIABLE_CONFIRMATION.replace('%1', uses.length).
+        replace('%2', name),
+        function(ok) {
+          if (ok) {
+            workspace.deleteVariableInternal_(name);
+          }
+        });
+  } else {
+    // No confirmation necessary for a single block.
+    this.deleteVariableInternal_(name);
+  }
+};
+
+/**
+ * Deletes a variable and all of its uses from this workspace without asking the
+ * user for confirmation.
+ * @private
+ */
+Blockly.Workspace.prototype.deleteVariableInternal_ = function(name) {
+  var uses = this.getVariableUses(name);
+  var variableIndex = this.variableIndexOf(name);
+  Blockly.Events.setGroup(true);
+  for (var i = 0; i < uses.length; i++) {
+    uses[i].dispose(true, false);
+  }
+  Blockly.Events.setGroup(false);
+  this.variableList.splice(variableIndex, 1);
+    this.variableMetaDataList.splice(variableIndex, 1);
 };
 
 /**
@@ -342,6 +472,15 @@ Blockly.Workspace.prototype.deleteVariable = function(name) {
 Blockly.Workspace.prototype.variableIndexOf = function(name) {
   for (var i = 0, varname; varname = this.variableList[i]; i++) {
     if (Blockly.Names.equals(varname, name)) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+Blockly.Workspace.prototype.caseSensitiveVariableIndexOf = function(name) {
+  for (var i = 0, varname; varname = this.variableList[i]; i++) {
+    if (varname === name) {
       return i;
     }
   }
@@ -458,12 +597,62 @@ Blockly.Workspace.prototype.fireChangeListener = function(event) {
 };
 
 /**
+ * Fire on copy to clipboard
+ * @param {!Function} func Function to call.
+ * @return {!Function} Function that can be passed to
+ *     removeChangeListener.
+ */
+Blockly.Workspace.prototype.setCopyListener = function(func) {
+  this.copyListener = func;
+  return func;
+};
+
+/**
+ * Fire on paste from clipboard
+ * @param {!Function} func Function to call.
+ * @return {!Function} Function that can be passed to
+ *     removeChangeListener.
+ */
+Blockly.Workspace.prototype.setPasteListener = function(func) {
+  this.pasteListener = func;
+  return func;
+};
+
+/**
+ * Fire on rename
+ * @param {!Function} func Function to call.
+ * @return {!Function} Function that can be passed to
+ *     removeChangeListener.
+ */
+Blockly.Workspace.prototype.setRenameListener = function(func) {
+  this.renameListener = func;
+  return func;
+};
+
+/**
  * Find the block on this workspace with the specified ID.
  * @param {string} id ID of block to find.
  * @return {Blockly.Block} The sought after block or null if not found.
  */
 Blockly.Workspace.prototype.getBlockById = function(id) {
   return this.blockDB_[id] || null;
+};
+
+/**
+ * Checks whether all value and statement inputs in the workspace are filled
+ * with blocks.
+ * @param {boolean=} opt_shadowBlocksAreFilled An optional argument controlling
+ *     whether shadow blocks are counted as filled. Defaults to true.
+ * @return {boolean} True if all inputs are filled, false otherwise.
+ */
+Blockly.Workspace.prototype.allInputsFilled = function(opt_shadowBlocksAreFilled) {
+  var blocks = this.getTopBlocks(false);
+  for (var i = 0, block; block = blocks[i]; i++) {
+    if (!block.allInputsFilled(opt_shadowBlocksAreFilled)) {
+      return false;
+    }
+  }
+  return true;
 };
 
 /**

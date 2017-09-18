@@ -24,6 +24,10 @@
  */
 'use strict';
 
+/**
+ * @name Blockly.ContextMenu
+ * @namespace
+ */
 goog.provide('Blockly.ContextMenu');
 
 goog.require('goog.dom');
@@ -38,6 +42,9 @@ goog.require('goog.ui.MenuItem');
  * @type {Blockly.Block}
  */
 Blockly.ContextMenu.currentBlock = null;
+
+Blockly.ContextMenu.LastLeft = 0;
+Blockly.ContextMenu.LastTop = 0;
 
 /**
  * Construct the menu based on the list of options and show the menu.
@@ -66,6 +73,10 @@ Blockly.ContextMenu.show = function(e, options, rtl) {
     if (option.enabled) {
       goog.events.listen(menuItem, goog.ui.Component.EventType.ACTION,
                          option.callback);
+      menuItem.handleContextMenu = function(e) {
+        // Right-clicking on menu option should count as a click.
+        goog.events.dispatchEvent(this, goog.ui.Component.EventType.ACTION);
+      };
     }
   }
   goog.events.listen(menu, goog.ui.Component.EventType.ACTION,
@@ -76,9 +87,10 @@ Blockly.ContextMenu.show = function(e, options, rtl) {
   var div = Blockly.WidgetDiv.DIV;
   menu.render(div);
   var menuDom = menu.getElement();
-  Blockly.addClass_(menuDom, 'blocklyContextMenu');
+  Blockly.utils.addClass(menuDom, 'blocklyContextMenu');
   // Prevent system context menu when right-clicking a Blockly context menu.
-  Blockly.bindEventWithChecks_(menuDom, 'contextmenu', null, Blockly.noEvent);
+  Blockly.bindEventWithChecks_(menuDom, 'contextmenu', null,
+                               Blockly.utils.noEvent);
   // Record menuSize after adding menu.
   var menuSize = goog.style.getSize(menuDom);
 
@@ -100,6 +112,8 @@ Blockly.ContextMenu.show = function(e, options, rtl) {
     }
   }
   Blockly.WidgetDiv.position(x, y, windowSize, scrollOffset, rtl);
+  Blockly.ContextMenu.LastLeft = parseInt(Blockly.WidgetDiv.DIV.style.left);
+  Blockly.ContextMenu.LastTop = parseInt(Blockly.WidgetDiv.DIV.style.top);
 
   menu.setAllowAutoFocus(true);
   // 1ms delay is required for focusing on context menus because some other

@@ -29,6 +29,8 @@ goog.provide('Blockly.BlockSvg.render');
 
 goog.require('Blockly.BlockSvg');
 
+goog.require('goog.userAgent');
+
 
 // UI constants for rendering blocks.
 /**
@@ -314,6 +316,13 @@ Blockly.BlockSvg.prototype.renderFields_ =
     if (!root) {
       continue;
     }
+
+    // Force a width re-calculation on IE and Edge to get around the issue
+    // described in Blockly.Field.getCachedWidth
+    if (goog.userAgent.IE || goog.userAgent.EDGE) {
+      field.updateWidth();
+    }
+
     if (this.RTL) {
       cursorX -= field.renderSep + field.renderWidth;
       root.setAttribute('transform',
@@ -554,7 +563,7 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
  */
 Blockly.BlockSvg.prototype.renderMoveConnections_ = function() {
   var blockTL = this.getRelativeToSurfaceXY();
-  // Don't tighten previous or output connecitons because they are inferior
+  // Don't tighten previous or output connections because they are inferior
   // connections.
   if (this.previousConnection) {
     this.previousConnection.moveToOffset(blockTL);
