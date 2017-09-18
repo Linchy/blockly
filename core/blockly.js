@@ -201,6 +201,14 @@ Blockly.onKeyDown_ = function (e) {
     // When focused on an HTML text input widget, don't trap any keys.
     return;
   }
+
+  // e = e || window.event;
+  // var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+  // if (!charCode)
+  //   return;
+  // var ekeyCode = String.fromCharCode(charCode);
+  // nativeNavigate('ekey', ekeyCode);
+
   var deleteBlock = false;
   if (e.keyCode == 27) {
     // Pressing esc closes the context menu.
@@ -300,6 +308,9 @@ Blockly.duplicate_ = function (block) {
   var xy = block.getRelativeToSurfaceXY();
   newBlock.moveBy(xy.x + Blockly.SNAP_RADIUS, xy.y + Blockly.SNAP_RADIUS * (newBlock.RTL ? -2 : 2));
 
+  // fix IE spacing issues
+  block.workspace.render();
+
   // Save the clipboard.
   /*var clipboardXml = Blockly.clipboardXml_;
   var clipboardSource = Blockly.clipboardSource_;
@@ -333,6 +344,9 @@ Blockly.duplicateSet_ = function (block) {
   // move above the original block
   var xy = block.getRelativeToSurfaceXY();
   newBlock.moveBy(xy.x + Blockly.SNAP_RADIUS, xy.y + Blockly.SNAP_RADIUS * (newBlock.RTL ? -2 : 2));
+  
+  // fix IE spacing issues
+  block.workspace.render();
 };
 
 /**

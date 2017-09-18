@@ -302,10 +302,10 @@ Blockly.Workspace.prototype.updateVariableList = function(clearList) {
  */
 Blockly.Workspace.prototype.renameVariable = function(oldName, newName, opt_dontCheckIfExisting) {
   // Find the old name in the list.
-  var variableIndex = this.variableIndexOf(oldName);
-  var newVariableIndex = this.variableIndexOf(newName);
+  var variableIndex = this.caseSensitiveVariableIndexOf(oldName);
+  var newVariableIndex = this.caseSensitiveVariableIndexOf(newName);
 
-  // don't allow rename to wzisting name
+  // don't allow rename to existing name
   if (opt_dontCheckIfExisting == true)
   {}
   else if (newVariableIndex != -1) {
@@ -316,19 +316,19 @@ Blockly.Workspace.prototype.renameVariable = function(oldName, newName, opt_dont
   // We might be renaming to an existing name but with different case.  If so,
   // we will also update all of the blocks using the new name to have the
   // correct case.
-  if (newVariableIndex != -1 &&
-      this.variableList[newVariableIndex] != newName) {
-    var oldCase = this.variableList[newVariableIndex];
-  }
+  // if (newVariableIndex != -1 &&
+  //     this.variableList[newVariableIndex] != newName) {
+  //   var oldCase = this.variableList[newVariableIndex];
+  // }
 
   Blockly.Events.setGroup(true);
   var blocks = this.getAllBlocks();
   // Iterate through every block.
   for (var i = 0; i < blocks.length; i++) {
     blocks[i].renameVar(oldName, newName);
-    if (oldCase) {
-      blocks[i].renameVar(oldCase, newName);
-    }
+    // if (oldCase) {
+    //   blocks[i].renameVar(oldCase, newName);
+    // }
   }
   Blockly.Events.setGroup(false);
 
@@ -472,6 +472,15 @@ Blockly.Workspace.prototype.deleteVariableInternal_ = function(name) {
 Blockly.Workspace.prototype.variableIndexOf = function(name) {
   for (var i = 0, varname; varname = this.variableList[i]; i++) {
     if (Blockly.Names.equals(varname, name)) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+Blockly.Workspace.prototype.caseSensitiveVariableIndexOf = function(name) {
+  for (var i = 0, varname; varname = this.variableList[i]; i++) {
+    if (varname === name) {
       return i;
     }
   }

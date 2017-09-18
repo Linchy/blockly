@@ -304,7 +304,7 @@ Blockly.createHtmlElement = function(name, attrs, parent, opt_workspace) {
   // elements created with createElementNS. However, Closure checks for IE
   // and assumes the presence of the attribute and crashes.
   if (document.body.runtimeStyle) {  // Indicates presence of IE-only attr.
-    e.runtimeStyle = e.currentStyle = e.style;
+    //e.runtimeStyle = e.currentStyle = e.style;
   }
   if (parent) {
     parent.appendChild(e);
